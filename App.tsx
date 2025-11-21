@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Search, LayoutGrid, Filter, BookOpen, Lightbulb, ChevronRight, Home, Zap, Languages } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages } from 'lucide-react';
 import { PromptTable } from './components/PromptTable';
 import { PromptForm } from './components/PromptModal';
-import { PromptEntry, PromptFormData, Category, AIModel } from './types';
+import { PromptEntry, PromptFormData, Category } from './types';
 import { MOCK_PROMPTS, TRANSLATIONS } from './constants';
 
 function App() {
@@ -12,6 +12,10 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   
+  // Refs for focus management
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const categorySelectRef = useRef<HTMLSelectElement>(null);
+
   // Language State - Default to Spanish ('es')
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const t = TRANSLATIONS[lang];
@@ -22,6 +26,7 @@ function App() {
       const matchesSearch = 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.objective.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.recommendedAi.toLowerCase().includes(searchQuery.toLowerCase()) || // Added AI model search
         p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
@@ -68,6 +73,25 @@ function App() {
 
   const toggleLanguage = () => {
     setLang(prev => prev === 'es' ? 'en' : 'es');
+  };
+
+  // Quick Action Handlers for Stat Buttons
+  const handleTotalClick = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+    // Optional: Scroll to table top
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+  };
+
+  const handleCategoryClick = () => {
+    categorySelectRef.current?.focus();
+    categorySelectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Provide visual feedback (shake or highlight could be added here)
+  };
+
+  const handleModelClick = () => {
+    searchInputRef.current?.focus();
+    searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   // Stats
@@ -144,38 +168,50 @@ function App() {
         {view === 'list' ? (
           <div className="space-y-6 animate-fadeIn">
             
-            {/* Compact Stats Bar (Dark Mode) */}
+            {/* INTERACTIVE STATS BAR (BUTTONS) */}
             <div className="bg-[#1e293b]/80 backdrop-blur-md rounded-xl shadow-xl border border-slate-700/50 p-1 flex flex-wrap items-center justify-between divide-x divide-slate-700/50">
               
-              <div className="flex-1 flex items-center justify-center gap-3 p-3 hover:bg-slate-800/50 transition-colors first:rounded-l-xl group cursor-default">
-                 <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg group-hover:text-blue-300 group-hover:bg-blue-400/20 transition-all">
+              <button 
+                onClick={handleTotalClick}
+                className="flex-1 flex items-center justify-center gap-3 p-3 hover:bg-slate-800/80 active:bg-slate-800 transition-all first:rounded-l-xl group cursor-pointer active:scale-95 focus:outline-none focus:bg-slate-800"
+                title="Reset filters and show all prompts"
+              >
+                 <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg group-hover:text-blue-300 group-hover:bg-blue-400/20 group-active:scale-90 transition-all">
                     <LayoutGrid size={20}/>
                  </div>
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-slate-400">{t.app.stats.total}</span>
+                 <div className="flex flex-col items-start">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-blue-300 transition-colors">{t.app.stats.total}</span>
                     <span className="text-xl font-mono font-bold text-white leading-none">{stats.total}</span>
                  </div>
-              </div>
+              </button>
 
-              <div className="flex-1 flex items-center justify-center gap-3 p-3 hover:bg-slate-800/50 transition-colors group cursor-default">
-                 <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg group-hover:text-purple-300 group-hover:bg-purple-400/20 transition-all">
+              <button 
+                onClick={handleCategoryClick}
+                className="flex-1 flex items-center justify-center gap-3 p-3 hover:bg-slate-800/80 active:bg-slate-800 transition-all group cursor-pointer active:scale-95 focus:outline-none focus:bg-slate-800"
+                title="Filter by Category"
+              >
+                 <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg group-hover:text-purple-300 group-hover:bg-purple-400/20 group-active:scale-90 transition-all">
                     <Filter size={20}/>
                  </div>
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-slate-400">{t.app.stats.categories}</span>
+                 <div className="flex flex-col items-start">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-purple-300 transition-colors">{t.app.stats.categories}</span>
                     <span className="text-xl font-mono font-bold text-white leading-none">{stats.categories}</span>
                  </div>
-              </div>
+              </button>
 
-              <div className="flex-1 flex items-center justify-center gap-3 p-3 hover:bg-slate-800/50 transition-colors last:rounded-r-xl group cursor-default">
-                 <div className="p-2 bg-green-500/10 text-green-400 rounded-lg group-hover:text-green-300 group-hover:bg-green-400/20 transition-all">
+              <button 
+                onClick={handleModelClick}
+                className="flex-1 flex items-center justify-center gap-3 p-3 hover:bg-slate-800/80 active:bg-slate-800 transition-all last:rounded-r-xl group cursor-pointer active:scale-95 focus:outline-none focus:bg-slate-800"
+                title="Search by Model"
+              >
+                 <div className="p-2 bg-green-500/10 text-green-400 rounded-lg group-hover:text-green-300 group-hover:bg-green-400/20 group-active:scale-90 transition-all">
                     <Zap size={20}/>
                  </div>
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-slate-400">{t.app.stats.models}</span>
+                 <div className="flex flex-col items-start">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-green-300 transition-colors">{t.app.stats.models}</span>
                     <span className="text-xl font-mono font-bold text-white leading-none">{stats.models}</span>
                  </div>
-              </div>
+              </button>
 
             </div>
 
@@ -184,6 +220,7 @@ function App() {
               <div className="relative w-full md:w-96 group">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors" size={20} />
                 <input 
+                  ref={searchInputRef}
                   type="text" 
                   placeholder={t.app.searchPlaceholder}
                   value={searchQuery}
@@ -195,9 +232,10 @@ function App() {
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <Filter size={20} className="text-slate-600 hidden md:block" />
                 <select 
+                  ref={categorySelectRef}
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full md:w-64 py-3 px-4 bg-[#0B1120] border border-slate-700 rounded-xl focus:ring-1 focus:ring-cyan-500 text-slate-300 font-medium cursor-pointer hover:border-slate-600 transition-colors"
+                  className="w-full md:w-64 py-3 px-4 bg-[#0B1120] border border-slate-700 rounded-xl focus:ring-1 focus:ring-cyan-500 text-slate-300 font-medium cursor-pointer hover:border-slate-600 transition-colors focus:border-purple-500 focus:ring-purple-500"
                 >
                   <option value="All">{t.app.allCategories}</option>
                   {Object.values(Category).map(cat => (

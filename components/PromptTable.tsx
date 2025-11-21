@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, Copy, Check, MessageSquare, ChevronDown, Maximize2, X, Terminal } from 'lucide-react';
+import { Edit2, Trash2, Copy, Check, MessageSquare, Maximize2, X, Terminal, Code2 } from 'lucide-react';
 import { PromptEntry, AIModel, TranslationDictionary } from '../types';
 
 interface PromptTableProps {
@@ -9,7 +9,49 @@ interface PromptTableProps {
   dict: TranslationDictionary['table'];
 }
 
-// Helper component for the modal popup
+// Componente para Celdas tipo Excel que se expanden al hacer hover
+const ExcelCell = ({ 
+  content, 
+  displayContent, 
+  className = "",
+  onClick
+}: { 
+  content: string, 
+  displayContent?: React.ReactNode, 
+  className?: string,
+  onClick?: () => void
+}) => {
+  return (
+    <div 
+      onClick={onClick}
+      // CAMBIO CRÍTICO: 'group/cell' aísla el contexto de hover a este div específico.
+      // Esto evita que el hover de la fila (tr) active todas las celdas a la vez.
+      className={`relative group/cell h-full w-full px-3 py-2 cursor-cell hover:bg-[#1e293b] transition-colors ${className}`}
+    >
+      {/* Vista Compacta (Por defecto) */}
+      <div className="truncate text-xs font-mono text-slate-300 h-full flex items-center select-none">
+        {displayContent || content}
+      </div>
+
+      {/* Vista Expandida (Hover Pop-out) */}
+      {content && (
+        // CAMBIO CRÍTICO: 
+        // 1. 'group-hover/cell:block': Solo responde al hover de SU celda.
+        // 2. 'delay-75': Evita que aparezca si pasas el mouse rápido (barrido).
+        // 3. 'z-[100]': Asegura que flote por encima de todo.
+        <div className="hidden group-hover/cell:block absolute top-[-4px] left-[-4px] z-[100] bg-[#0B1120] border border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.4)] p-3 min-w-[calc(100%+8px)] w-max max-w-[350px] whitespace-pre-wrap break-words rounded-lg text-xs text-cyan-50 leading-relaxed animate-in fade-in zoom-in-95 duration-100 delay-75">
+          <div className="mb-1 text-[10px] uppercase text-slate-500 font-bold tracking-wider border-b border-slate-800 pb-1 mb-2 flex justify-between items-center">
+             <span>DATA_VIEW</span>
+             {onClick && <Maximize2 size={10} className="text-cyan-500" />}
+          </div>
+          {content}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper component for the modal popup (Full Screen Code View)
 const PromptPopup = ({ content, onClose, dict }: { content: string, onClose: () => void, dict: TranslationDictionary['table'] }) => {
   const [isCopied, setIsCopied] = useState(false);
 
@@ -20,17 +62,19 @@ const PromptPopup = ({ content, onClose, dict }: { content: string, onClose: () 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
-      {/* Backdrop click close */}
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
       <div className="absolute inset-0" onClick={onClose}></div>
       
-      <div className="bg-[#0f172a] rounded-2xl shadow-2xl shadow-cyan-900/20 w-full max-w-3xl flex flex-col max-h-[85vh] relative z-10 animate-scaleIn border border-slate-700">
-        <div className="flex justify-between items-center p-5 border-b border-slate-700 bg-[#1e293b]/50 rounded-t-2xl">
+      <div className="bg-[#0f172a] rounded-xl shadow-2xl shadow-cyan-900/20 w-full max-w-4xl flex flex-col h-[80vh] relative z-10 animate-scaleIn border border-slate-700 flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b border-slate-700 bg-[#1e293b]/50 rounded-t-xl">
            <div className="flex items-center gap-3">
              <div className="bg-cyan-950/50 p-2 rounded-lg border border-cyan-900">
                 <Terminal size={18} className="text-cyan-400" />
              </div>
-             <h3 className="text-lg font-bold text-slate-100 tracking-wide">{dict.sourceCode}</h3>
+             <div>
+                <h3 className="text-sm font-bold text-slate-100 tracking-wide uppercase font-mono">{dict.sourceCode}</h3>
+                <p className="text-[10px] text-slate-500 font-mono">READ_ONLY_MODE</p>
+             </div>
            </div>
            <button 
              onClick={onClose}
@@ -40,59 +84,42 @@ const PromptPopup = ({ content, onClose, dict }: { content: string, onClose: () 
            </button>
         </div>
         
-        <div className="p-6 overflow-y-auto custom-scrollbar bg-[#0B1120] flex-1">
-           <div className="relative">
-             <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-cyan-500/50 to-transparent"></div>
-             <pre className="whitespace-pre-wrap font-mono text-sm text-cyan-50 leading-relaxed pl-4">
+        <div className="flex-1 overflow-hidden relative bg-[#0B1120]">
+           <div className="absolute left-0 top-0 bottom-0 w-[30px] border-r border-slate-800 bg-[#0f172a] flex flex-col items-center pt-4 text-[10px] text-slate-600 font-mono select-none">
+              {[...Array(20)].map((_, i) => <div key={i} className="h-6">{i+1}</div>)}
+           </div>
+           <div className="h-full overflow-y-auto custom-scrollbar pl-10 p-4">
+             <pre className="whitespace-pre-wrap font-mono text-sm text-cyan-50 leading-6 selection:bg-cyan-900 selection:text-white">
                {content}
              </pre>
            </div>
         </div>
         
-        <div className="p-4 border-t border-slate-700 flex justify-end bg-[#1e293b]/50 rounded-b-2xl gap-3">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-colors"
-          >
-            {dict.close}
-          </button>
-          <button 
-            onClick={handleCopy}
-            className={`flex items-center gap-2 px-5 py-2 rounded-lg font-medium transition-all shadow-lg ${
-              isCopied 
-                ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
-                : 'bg-cyan-600 text-white hover:bg-cyan-500 hover:shadow-cyan-500/20'
-            }`}
-          >
-            {isCopied ? <Check size={16} /> : <Copy size={16} />}
-            {isCopied ? dict.copied : dict.copy}
-          </button>
+        <div className="p-4 border-t border-slate-700 flex justify-between items-center bg-[#1e293b]/50 rounded-b-xl">
+          <div className="text-[10px] text-slate-500 font-mono">
+            CHARS: {content.length} | WORDS: {content.split(/\s+/).length}
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={onClose}
+              className="px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-colors uppercase tracking-wider"
+            >
+              {dict.close}
+            </button>
+            <button 
+              onClick={handleCopy}
+              className={`flex items-center gap-2 px-5 py-2 rounded-lg font-medium text-xs transition-all shadow-lg uppercase tracking-wider ${
+                isCopied 
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
+                  : 'bg-cyan-600 text-white hover:bg-cyan-500 hover:shadow-cyan-500/20'
+              }`}
+            >
+              {isCopied ? <Check size={14} /> : <Copy size={14} />}
+              {isCopied ? dict.copied : dict.copy}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-// Helper component for Excel-like expandable cells
-const ExpandableCell = ({ text }: { text: string }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div 
-      onClick={() => setIsExpanded(!isExpanded)}
-      className={`
-        cursor-pointer transition-all duration-200 relative group
-        ${isExpanded ? 'whitespace-pre-wrap break-words' : 'truncate'}
-        text-sm text-slate-300 hover:text-cyan-300
-      `}
-      title="Click to toggle view"
-    >
-      {isExpanded ? text : text}
-      {!isExpanded && (
-        <span className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-cyan-500 bg-[#0f172a] px-1 shadow-[-4px_0_8px_#0f172a]">
-          <ChevronDown size={12} />
-        </span>
-      )}
     </div>
   );
 };
@@ -102,121 +129,132 @@ export const PromptTable: React.FC<PromptTableProps> = ({ prompts, onEdit, onDel
 
   const getAiBadgeColor = (ai: AIModel) => {
     switch (ai) {
-      case AIModel.ChatGPT: return 'bg-green-900/30 text-green-400 border-green-800';
-      case AIModel.Gemini: return 'bg-blue-900/30 text-blue-400 border-blue-800';
-      case AIModel.Claude: return 'bg-orange-900/30 text-orange-400 border-orange-800';
-      default: return 'bg-slate-800 text-slate-400 border-slate-700';
+      case AIModel.ChatGPT: return 'text-green-400';
+      case AIModel.Gemini: return 'text-blue-400';
+      case AIModel.Claude: return 'text-orange-400';
+      default: return 'text-slate-400';
     }
   };
 
   if (prompts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 bg-[#1e293b]/50 rounded-2xl shadow-lg border border-slate-700 text-center backdrop-blur-sm">
+      <div className="flex flex-col items-center justify-center py-24 bg-[#1e293b]/20 rounded-xl border-2 border-dashed border-slate-800 text-center">
         <div className="bg-slate-800/50 p-4 rounded-full mb-4 border border-slate-700">
           <MessageSquare className="h-10 w-10 text-slate-500" />
         </div>
-        <h3 className="text-xl font-bold text-slate-200">{dict.emptyTitle}</h3>
-        <p className="text-slate-500 mt-2 max-w-sm">{dict.emptyDesc}</p>
+        <h3 className="text-xl font-bold text-slate-200 font-mono">{dict.emptyTitle}</h3>
+        <p className="text-slate-500 mt-2 max-w-sm text-sm">{dict.emptyDesc}</p>
       </div>
     );
   }
 
   return (
     <>
-      {/* Global Popup */}
+      {/* Global Popup for Code View */}
       {viewingPrompt && (
         <PromptPopup content={viewingPrompt} onClose={() => setViewingPrompt(null)} dict={dict} />
       )}
 
-      <div className="bg-[#1e293b]/60 backdrop-blur-sm rounded-xl shadow-xl border border-slate-700 overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="min-w-full divide-y divide-slate-700">
+      <div className="rounded-lg overflow-visible"> {/* Overflow visible para permitir pop-outs */}
+        <div className="border border-slate-700 bg-[#0B1120] rounded-lg shadow-2xl overflow-visible">
+          <table className="min-w-full border-collapse table-fixed">
             <thead>
-              <tr className="bg-[#0f172a]">
-                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-cyan-500/80 uppercase tracking-wider whitespace-nowrap w-[15%]">{dict.identity}</th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-cyan-500/80 uppercase tracking-wider whitespace-nowrap w-[20%]">{dict.objective}</th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-cyan-500/80 uppercase tracking-wider whitespace-nowrap w-[10%]">{dict.engine}</th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-cyan-500/80 uppercase tracking-wider w-[35%]">{dict.sourceCode}</th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-cyan-500/80 uppercase tracking-wider whitespace-nowrap w-[10%]">{dict.metadata}</th>
-                <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-cyan-500/80 uppercase tracking-wider whitespace-nowrap w-[10%]">{dict.controls}</th>
+              <tr className="bg-[#0f172a] border-b border-slate-700">
+                <th className="w-[40px] px-2 py-3 text-center border-r border-slate-700 text-[10px] text-slate-600 font-mono">#</th>
+                <th className="w-[18%] px-3 py-3 text-left text-[10px] font-bold text-cyan-500 uppercase tracking-widest border-r border-slate-700 select-none">{dict.identity}</th>
+                <th className="w-[20%] px-3 py-3 text-left text-[10px] font-bold text-cyan-500 uppercase tracking-widest border-r border-slate-700 select-none">{dict.objective}</th>
+                <th className="w-[12%] px-3 py-3 text-left text-[10px] font-bold text-cyan-500 uppercase tracking-widest border-r border-slate-700 select-none">{dict.engine}</th>
+                <th className="w-[30%] px-3 py-3 text-left text-[10px] font-bold text-cyan-500 uppercase tracking-widest border-r border-slate-700 select-none">{dict.sourceCode}</th>
+                <th className="w-[10%] px-3 py-3 text-left text-[10px] font-bold text-cyan-500 uppercase tracking-widest border-r border-slate-700 select-none">{dict.metadata}</th>
+                <th className="w-[80px] px-3 py-3 text-center text-[10px] font-bold text-cyan-500 uppercase tracking-widest select-none">{dict.controls}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50 bg-[#1e293b]/20">
-              {prompts.map((prompt) => (
-                <tr key={prompt.id} className="hover:bg-[#2a3855]/40 transition-colors group border-l-2 border-transparent hover:border-cyan-500">
-                  {/* Col 1: Identity */}
-                  <td className="px-4 py-4 align-middle border-r border-slate-700/30">
-                    <div className="font-bold text-sm text-slate-200 truncate max-w-[160px]" title={prompt.name}>{prompt.name}</div>
-                    <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-1">{prompt.category}</div>
+            <tbody className="divide-y divide-slate-800">
+              {prompts.map((prompt, index) => (
+                <tr key={prompt.id} className="bg-[#0B1120] hover:bg-[#111827] group h-10">
+                  
+                  {/* Index Column */}
+                  <td className="border-r border-slate-800 text-center text-[10px] font-mono text-slate-600">
+                    {index + 1}
                   </td>
 
-                  {/* Col 2: Objective (Expandable Text) */}
-                  <td className="px-4 py-4 align-middle border-r border-slate-700/30">
-                     <ExpandableCell text={prompt.objective} />
-                     {prompt.persona && (
-                      <div className="text-[10px] text-purple-400 mt-2 flex items-center gap-1 truncate">
-                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
-                        {prompt.persona}
-                      </div>
-                     )}
+                  {/* Identity (Name + Category) */}
+                  <td className="border-r border-slate-800 p-0 relative">
+                    <ExcelCell 
+                      content={`${prompt.name}\n[${prompt.category}]`}
+                      displayContent={
+                        <div className="flex flex-col justify-center h-full">
+                          <span className="text-slate-200 font-bold leading-tight">{prompt.name}</span>
+                          <span className="text-[9px] text-slate-500 uppercase">{prompt.category.split(' ')[0]}</span>
+                        </div>
+                      }
+                    />
                   </td>
 
-                  {/* Col 3: Tech */}
-                  <td className="px-4 py-4 align-middle border-r border-slate-700/30">
-                    <span className={`inline-block px-2 py-1 rounded text-[10px] font-mono border ${getAiBadgeColor(prompt.recommendedAi)}`}>
-                      {prompt.recommendedAi.split(' ')[0]}
-                    </span>
-                    <div className="text-[10px] text-slate-500 mt-1 truncate max-w-[80px] font-mono">{prompt.inputType}</div>
+                  {/* Objective */}
+                  <td className="border-r border-slate-800 p-0 relative">
+                    <ExcelCell 
+                      content={prompt.objective}
+                    />
                   </td>
 
-                  {/* Col 4: The Prompt (Popup Trigger Box) */}
-                  <td className="px-4 py-4 align-middle border-r border-slate-700/30">
-                    <div 
-                      onClick={() => setViewingPrompt(prompt.content)}
-                      className="
-                        group/box
-                        cursor-pointer 
-                        bg-[#0B1120] hover:bg-black
-                        border border-slate-700 hover:border-cyan-500/50
-                        rounded-lg px-3 py-2.5 
-                        text-sm text-slate-400 hover:text-cyan-100
-                        truncate 
-                        transition-all duration-200
-                        shadow-inner
-                        flex justify-between items-center
-                        h-[42px] w-full max-w-md
-                        font-mono
-                      "
-                      title="View Full Source"
-                    >
-                      <span className="truncate mr-2 opacity-80">
-                        {prompt.content}
-                      </span>
-                      <Maximize2 
-                        size={14} 
-                        className="text-cyan-500 opacity-0 group-hover/box:opacity-100 transition-opacity shrink-0" 
-                      />
-                    </div>
+                  {/* Engine */}
+                  <td className="border-r border-slate-800 p-0 relative">
+                    <ExcelCell 
+                      content={`Model: ${prompt.recommendedAi}\nInput: ${prompt.inputType}\nPersona: ${prompt.persona}`}
+                      displayContent={
+                        <span className={`text-[10px] font-mono ${getAiBadgeColor(prompt.recommendedAi)}`}>
+                          {prompt.recommendedAi.split(' ')[0]}
+                        </span>
+                      }
+                    />
                   </td>
 
-                  {/* Col 5: Tags */}
-                  <td className="px-4 py-4 align-middle border-r border-slate-700/30">
-                    <div className="flex flex-wrap gap-1 overflow-hidden max-h-[48px]">
-                      {prompt.tags.slice(0, 2).map((t, i) => (
-                        <span key={i} className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-600 whitespace-nowrap">#{t}</span>
-                      ))}
-                      {prompt.tags.length > 2 && <span className="text-[10px] text-slate-500">+{prompt.tags.length - 2}</span>}
-                    </div>
+                  {/* Prompt Content (Special Handling) */}
+                  <td className="border-r border-slate-800 p-0 relative">
+                     <ExcelCell 
+                        content={prompt.content}
+                        onClick={() => setViewingPrompt(prompt.content)}
+                        displayContent={
+                          <div className="flex items-center gap-2 text-slate-400 opacity-80 group-hover/cell:text-cyan-300 transition-colors w-full">
+                            <Code2 size={12} className="shrink-0" />
+                            <span className="truncate font-mono italic">{prompt.content.substring(0, 50)}...</span>
+                          </div>
+                        }
+                     />
                   </td>
 
-                  {/* Col 6: Actions */}
-                  <td className="px-4 py-4 whitespace-nowrap text-right align-middle">
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => onEdit(prompt)} className="text-slate-500 hover:text-cyan-400 p-1.5 rounded hover:bg-cyan-950/30 transition-all" title="Edit">
-                        <Edit2 size={16} />
+                  {/* Tags */}
+                  <td className="border-r border-slate-800 p-0 relative">
+                    <ExcelCell 
+                      content={prompt.tags.join(', ')}
+                      displayContent={
+                         <div className="flex gap-1 overflow-hidden">
+                            {prompt.tags.slice(0,1).map(t => (
+                              <span key={t} className="px-1.5 py-0.5 bg-slate-800 rounded text-[9px] border border-slate-700 text-slate-400">{t}</span>
+                            ))}
+                            {prompt.tags.length > 1 && <span className="text-[9px] text-slate-600">+{prompt.tags.length - 1}</span>}
+                         </div>
+                      }
+                    />
+                  </td>
+
+                  {/* Actions */}
+                  <td className="p-0 text-center">
+                    <div className="flex items-center justify-center gap-1 h-full w-full px-2">
+                      <button 
+                        onClick={() => onEdit(prompt)} 
+                        className="p-1.5 rounded hover:bg-cyan-500/10 text-slate-500 hover:text-cyan-400 transition-colors"
+                        title="Edit Row"
+                      >
+                        <Edit2 size={14} />
                       </button>
-                      <button onClick={() => onDelete(prompt.id)} className="text-slate-500 hover:text-red-400 p-1.5 rounded hover:bg-red-950/30 transition-all" title="Delete">
-                        <Trash2 size={16} />
+                      <button 
+                        onClick={() => onDelete(prompt.id)} 
+                        className="p-1.5 rounded hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
+                        title="Delete Row"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -225,9 +263,17 @@ export const PromptTable: React.FC<PromptTableProps> = ({ prompts, onEdit, onDel
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 border-t border-slate-700 bg-[#0f172a] text-xs text-slate-500 flex justify-between items-center font-mono">
-          <span>{prompts.length} {dict.entriesLoaded}</span>
-          <span className="flex items-center gap-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> {dict.systemReady}</span>
+        
+        {/* Excel Footer Status Bar */}
+        <div className="bg-[#0f172a] border border-t-0 border-slate-700 rounded-b-lg px-4 py-1 flex justify-between items-center text-[10px] font-mono text-slate-500 select-none">
+          <div className="flex gap-4">
+             <span>READY</span>
+             <span>{prompts.length} ROWS</span>
+          </div>
+          <div className="flex gap-4">
+             <span className="hover:text-cyan-400 cursor-pointer transition-colors">UTF-8</span>
+             <span className="hover:text-cyan-400 cursor-pointer transition-colors">SECURE</span>
+          </div>
         </div>
       </div>
     </>
