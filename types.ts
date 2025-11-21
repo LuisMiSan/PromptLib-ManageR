@@ -32,3 +32,86 @@ export interface PromptEntry {
 }
 
 export type PromptFormData = Omit<PromptEntry, 'id'>;
+
+// Interfaces para el sistema de traducción
+export interface TranslationDictionary {
+  app: {
+    home: string;
+    newPrompt: string;
+    editPrompt: string;
+    title: string;
+    searchPlaceholder: string;
+    allCategories: string;
+    stats: {
+      total: string;
+      categories: string;
+      models: string;
+    }
+  };
+  table: {
+    identity: string;
+    objective: string;
+    engine: string;
+    sourceCode: string;
+    metadata: string;
+    controls: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    entriesLoaded: string;
+    systemReady: string;
+    copy: string;
+    copied: string;
+    close: string;
+  };
+  form: {
+    editTitle: string;
+    newTitle: string;
+    systemId: string;
+    abort: string;
+    save: string;
+    dragDrop: {
+      analyzing: string;
+      analyzingSub: string;
+      title: string;
+      desc: string;
+    };
+    sections: {
+      core: string;
+      vars: string;
+      engineering: string;
+    };
+    labels: {
+      designation: string;
+      category: string;
+      engine: string;
+      persona: string;
+      variables: string;
+      tags: string;
+      objective: string;
+      inputFormat: string;
+      content: string;
+      notes: string;
+    };
+    buttons: {
+      audio: string;
+      audioPlaying: string;
+      optimize: string;
+      optimizing: string;
+      add: string;
+    };
+    placeholders: {
+      name: string;
+      persona: string;
+      variable: string;
+      tag: string;
+      objective: string;
+      input: string;
+      content: string;
+      notes: string;
+    };
+    status: {
+      ready: string;
+      varsDetected: string;
+    }
+  };
+}

@@ -1,4 +1,4 @@
-import { PromptEntry, Category, AIModel } from './types';
+import { PromptEntry, Category, AIModel, TranslationDictionary } from './types';
 
 export const MOCK_PROMPTS: PromptEntry[] = [
   {
@@ -58,3 +58,168 @@ export const MOCK_PROMPTS: PromptEntry[] = [
     tags: ['Planificación', 'Estrategia']
   }
 ];
+
+export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
+  es: {
+    app: {
+      home: 'Inicio',
+      newPrompt: 'Nuevo Prompt',
+      editPrompt: 'Editar Prompt',
+      title: 'Gestor',
+      searchPlaceholder: 'Buscar en la base de datos...',
+      allCategories: 'Todas las Categorías',
+      stats: {
+        total: 'Total Prompts',
+        categories: 'Categorías',
+        models: 'Modelos IA'
+      }
+    },
+    table: {
+      identity: 'Identidad',
+      objective: 'Objetivo',
+      engine: 'Motor',
+      sourceCode: 'Código Fuente',
+      metadata: 'Metadatos',
+      controls: 'Controles',
+      emptyTitle: 'Sistema Vacío',
+      emptyDesc: 'Inicializa tu primer protocolo para comenzar.',
+      entriesLoaded: 'ENTRADAS CARGADAS',
+      systemReady: 'SISTEMA LISTO',
+      copy: 'Copiar Código',
+      copied: 'Copiado',
+      close: 'Cerrar'
+    },
+    form: {
+      editTitle: 'Modificar Protocolo',
+      newTitle: 'Inicializar Nuevo Protocolo',
+      systemId: 'ID Sistema',
+      abort: 'Cancelar',
+      save: 'Ejecutar Guardado',
+      dragDrop: {
+        analyzing: 'ANALIZANDO DATOS...',
+        analyzingSub: 'Red neuronal extrayendo patrones',
+        title: 'Autocompletado IA',
+        desc: 'Arrastra un archivo para extraer automáticamente la estructura del prompt usando modelos de Visión.'
+      },
+      sections: {
+        core: 'Parámetros Base',
+        vars: 'Variables Dinámicas y Etiquetas',
+        engineering: 'Ingeniería de Prompts'
+      },
+      labels: {
+        designation: 'Designación del Prompt',
+        category: 'Categoría',
+        engine: 'Motor Recomendado',
+        persona: 'Persona / Rol',
+        variables: 'Variables (Auto)',
+        tags: 'Etiquetas del Sistema',
+        objective: 'Objetivo Principal',
+        inputFormat: 'Formato de Entrada',
+        content: 'Contenido del Prompt',
+        notes: 'Notas Adicionales'
+      },
+      buttons: {
+        audio: 'REPRODUCIR TTS',
+        audioPlaying: 'AUDIO...',
+        optimize: 'MEJORA IA',
+        optimizing: 'OPTIMIZANDO...',
+        add: 'Añadir'
+      },
+      placeholders: {
+        name: 'Ej: Generador de Contenido Viral',
+        persona: 'Ej: Especialista SEO Senior',
+        variable: 'Añadir variable...',
+        tag: 'Añadir etiqueta...',
+        objective: '¿Cuál es el objetivo específico de esta secuencia?',
+        input: 'Ej: Texto plano, URL, CSV, Imagen...',
+        content: '// Ingresa la secuencia aquí...\n// Usa [corchetes] para variables.\n\nActúa como un [Rol]. Escribe un análisis técnico de...',
+        notes: 'Instrucciones de uso, contexto, restricciones...'
+      },
+      status: {
+        ready: 'LISTO PARA PROCESAR',
+        varsDetected: 'Variables entre [corchetes] detectadas.'
+      }
+    }
+  },
+  en: {
+    app: {
+      home: 'System_Root',
+      newPrompt: 'New_Sequence',
+      editPrompt: 'Edit_Protocol',
+      title: 'Lib Manager',
+      searchPlaceholder: 'Search database...',
+      allCategories: 'All Categories',
+      stats: {
+        total: 'Total Units',
+        categories: 'Categories',
+        models: 'AI Engines'
+      }
+    },
+    table: {
+      identity: 'Identity',
+      objective: 'Objective',
+      engine: 'Engine',
+      sourceCode: 'Source Code',
+      metadata: 'Metadata',
+      controls: 'Controls',
+      emptyTitle: 'System Empty',
+      emptyDesc: 'Initialize your first protocol prompt to begin.',
+      entriesLoaded: 'ENTRIES LOADED',
+      systemReady: 'SYSTEM READY',
+      copy: 'Copy Source',
+      copied: 'Copied',
+      close: 'Close'
+    },
+    form: {
+      editTitle: 'Modify Protocol',
+      newTitle: 'Initialize New Protocol',
+      systemId: 'System ID',
+      abort: 'Abort',
+      save: 'Execute Save',
+      dragDrop: {
+        analyzing: 'ANALYZING DATA...',
+        analyzingSub: 'Neural network is extracting patterns',
+        title: 'AI Auto-Fill',
+        desc: 'Drop a file to automatically extract prompt structure using Vision models.'
+      },
+      sections: {
+        core: 'Core Parameters',
+        vars: 'Dynamic Vars & Tags',
+        engineering: 'Prompt Engineering'
+      },
+      labels: {
+        designation: 'Prompt Designation',
+        category: 'Category',
+        engine: 'Recommended Engine',
+        persona: 'Persona / Role',
+        variables: 'Variables (Auto)',
+        tags: 'System Tags',
+        objective: 'Primary Objective',
+        inputFormat: 'Input Format',
+        content: 'Prompt Content',
+        notes: 'Additional Notes'
+      },
+      buttons: {
+        audio: 'TTS_PLAY',
+        audioPlaying: 'AUDIO_OUT...',
+        optimize: 'AI_ENHANCE',
+        optimizing: 'OPTIMIZING...',
+        add: 'Add'
+      },
+      placeholders: {
+        name: 'Ex: Viral Content Generator',
+        persona: 'Ex: Senior SEO Specialist',
+        variable: 'Add variable...',
+        tag: 'Add tag...',
+        objective: 'What is the specific goal of this sequence?',
+        input: 'Ex: Raw Text, URL, CSV, Image...',
+        content: '// Enter prompt sequence here...\n// Use [brackets] for variables.\n\nAct as a [Role]. Write a technical analysis of...',
+        notes: 'Usage instructions, context, constraints...'
+      },
+      status: {
+        ready: 'READY TO PROCESS',
+        varsDetected: 'Variables in [brackets] auto-detected.'
+      }
+    }
+  }
+};
