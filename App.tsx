@@ -1,13 +1,24 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages } from 'lucide-react';
+import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield } from 'lucide-react';
 import { PromptTable } from './components/PromptTable';
 import { PromptForm } from './components/PromptModal';
+import { AdminPanel } from './components/AdminPanel';
 import { PromptEntry, PromptFormData, Category } from './types';
 import { MOCK_PROMPTS, TRANSLATIONS } from './constants';
 
+// Helper to get icon for category
+const getCategoryIcon = (category: string) => {
+  if (category === Category.Marketing) return <Megaphone size={16} className="text-pink-400" />;
+  if (category === Category.Productivity) return <Target size={16} className="text-emerald-400" />;
+  if (category === Category.Creativity) return <Lightbulb size={16} className="text-yellow-400" />;
+  if (category === Category.Analysis) return <BarChart2 size={16} className="text-blue-400" />;
+  if (category === Category.Development) return <Code size={16} className="text-cyan-400" />;
+  return <LayoutGrid size={16} className="text-slate-400" />;
+};
+
 function App() {
   const [prompts, setPrompts] = useState<PromptEntry[]>(MOCK_PROMPTS);
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const [view, setView] = useState<'list' | 'form' | 'admin'>('list');
   const [editingPrompt, setEditingPrompt] = useState<PromptEntry | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -26,7 +37,7 @@ function App() {
       const matchesSearch = 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.objective.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.recommendedAi.toLowerCase().includes(searchQuery.toLowerCase()) || // Added AI model search
+        p.recommendedAi.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
@@ -75,18 +86,21 @@ function App() {
     setLang(prev => prev === 'es' ? 'en' : 'es');
   };
 
+  const handleAdminClick = () => {
+    setView('admin');
+    setEditingPrompt(undefined);
+  }
+
   // Quick Action Handlers for Stat Buttons
   const handleTotalClick = () => {
     setSearchQuery('');
     setSelectedCategory('All');
-    // Optional: Scroll to table top
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
   const handleCategoryClick = () => {
     categorySelectRef.current?.focus();
     categorySelectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    // Provide visual feedback (shake or highlight could be added here)
   };
 
   const handleModelClick = () => {
@@ -125,6 +139,12 @@ function App() {
                     <span className="text-cyan-400 animate-pulse">{editingPrompt ? t.app.editPrompt : t.app.newPrompt}</span>
                   </>
                 )}
+                {view === 'admin' && (
+                  <>
+                    <ChevronRight size={12} className="text-slate-600"/>
+                    <span className="text-purple-400 animate-pulse">{t.app.admin}</span>
+                  </>
+                )}
               </div>
               <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
                 <div className="relative">
@@ -132,12 +152,21 @@ function App() {
                   <div className="absolute inset-0 bg-cyan-400 blur-md opacity-40"></div>
                 </div>
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-                  DeepPrompt<span className="text-cyan-500">.{t.app.title}</span>
+                  PromptLib <span className="text-cyan-500">Manager</span>
                 </span>
               </h1>
             </div>
             
             <div className="flex items-center gap-4">
+              {/* Admin Button */}
+              <button 
+                onClick={handleAdminClick}
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-700 bg-[#0B1120] hover:border-purple-500/50 hover:text-purple-400 text-slate-400 transition-all"
+                title="Admin Console"
+              >
+                <Shield size={14} />
+              </button>
+
               {/* Language Toggle */}
               <button 
                 onClick={toggleLanguage}
@@ -165,7 +194,7 @@ function App() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-12 relative z-20">
         
-        {view === 'list' ? (
+        {view === 'list' && (
           <div className="space-y-6 animate-fadeIn">
             
             {/* INTERACTIVE STATS BAR (BUTTONS) */}
@@ -225,23 +254,40 @@ function App() {
                   placeholder={t.app.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-[#0B1120] border border-slate-700 rounded-xl focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 text-slate-200 placeholder-slate-600 transition-all"
+                  className="w-full pl-12 pr-10 py-3 bg-[#0B1120] border border-slate-700 rounded-xl focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 text-slate-200 placeholder-slate-600 transition-all"
                 />
+                {/* Clear Search Button */}
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-white transition-colors bg-transparent border-none p-1"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
               
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <Filter size={20} className="text-slate-600 hidden md:block" />
+              <div className="flex items-center gap-3 w-full md:w-auto relative">
+                {/* Visual Icon for Selected Category */}
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                   {selectedCategory === 'All' ? <Filter size={20} className="text-slate-500" /> : getCategoryIcon(selectedCategory)}
+                </div>
+                
                 <select 
                   ref={categorySelectRef}
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full md:w-64 py-3 px-4 bg-[#0B1120] border border-slate-700 rounded-xl focus:ring-1 focus:ring-cyan-500 text-slate-300 font-medium cursor-pointer hover:border-slate-600 transition-colors focus:border-purple-500 focus:ring-purple-500"
+                  className="w-full md:w-64 py-3 pl-12 pr-4 bg-[#0B1120] border border-slate-700 rounded-xl focus:ring-1 focus:ring-cyan-500 text-slate-300 font-medium cursor-pointer hover:border-slate-600 transition-colors focus:border-purple-500 focus:ring-purple-500 appearance-none"
                 >
                   <option value="All">{t.app.allCategories}</option>
                   {Object.values(Category).map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
+                {/* Custom chevron to replace default */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <ChevronRight size={16} className="rotate-90" />
+                </div>
               </div>
             </div>
 
@@ -253,7 +299,9 @@ function App() {
               dict={t.table}
             />
           </div>
-        ) : (
+        )}
+        
+        {view === 'form' && (
           <div className="animate-slideUp">
              <PromptForm 
                 initialData={editingPrompt} 
@@ -262,6 +310,18 @@ function App() {
                 dict={t.form}
              />
           </div>
+        )}
+
+        {view === 'admin' && (
+           <div className="animate-slideUp">
+             <AdminPanel 
+               prompts={prompts} 
+               setPrompts={setPrompts}
+               onEdit={handleEdit}
+               onDelete={handleDelete}
+               dict={t.admin}
+             />
+           </div>
         )}
 
       </main>

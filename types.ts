@@ -39,6 +39,7 @@ export interface TranslationDictionary {
     home: string;
     newPrompt: string;
     editPrompt: string;
+    admin: string;
     title: string;
     searchPlaceholder: string;
     allCategories: string;
@@ -113,5 +114,21 @@ export interface TranslationDictionary {
       ready: string;
       varsDetected: string;
     }
+  };
+  admin: {
+    title: string;
+    subtitle: string;
+    columns: {
+      name: string;
+      category: string;
+      preview: string;
+      actions: string;
+    };
+    buttons: {
+      improveAi: string;
+      edit: string;
+      delete: string;
+    };
+    empty: string;
   };
 }

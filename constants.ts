@@ -65,6 +65,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       home: 'Inicio',
       newPrompt: 'Nuevo Prompt',
       editPrompt: 'Editar Prompt',
+      admin: 'Admin Console',
       title: 'Gestor',
       searchPlaceholder: 'Buscar en la base de datos...',
       allCategories: 'Todas las Categorías',
@@ -139,6 +140,22 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         ready: 'LISTO PARA PROCESAR',
         varsDetected: 'Variables entre [corchetes] detectadas.'
       }
+    },
+    admin: {
+      title: 'Gestor de Base de Datos',
+      subtitle: 'Acceso directo y optimización de prompts',
+      columns: {
+        name: 'Nombre del Prompt',
+        category: 'Categoría',
+        preview: 'Vista Previa (Inicio)',
+        actions: 'Acciones de IA / Gestión'
+      },
+      buttons: {
+        improveAi: 'Mejorar con IA',
+        edit: 'Editar',
+        delete: 'Eliminar'
+      },
+      empty: 'No hay prompts en la base de datos.'
     }
   },
   en: {
@@ -146,6 +163,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       home: 'System_Root',
       newPrompt: 'New_Sequence',
       editPrompt: 'Edit_Protocol',
+      admin: 'Admin Console',
       title: 'Lib Manager',
       searchPlaceholder: 'Search database...',
       allCategories: 'All Categories',
@@ -177,7 +195,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       abort: 'Abort',
       save: 'Execute Save',
       dragDrop: {
-        analyzing: 'ANALYZING DATA...',
+        analyzing: 'ANALIZING DATA...',
         analyzingSub: 'Neural network is extracting patterns',
         title: 'AI Auto-Fill',
         desc: 'Drop a file to automatically extract prompt structure using Vision models.'
@@ -220,6 +238,22 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         ready: 'READY TO PROCESS',
         varsDetected: 'Variables in [brackets] auto-detected.'
       }
+    },
+    admin: {
+      title: 'Database Manager',
+      subtitle: 'Direct access and prompt optimization',
+      columns: {
+        name: 'Prompt Name',
+        category: 'Category',
+        preview: 'Preview (Start)',
+        actions: 'AI Actions / Manage'
+      },
+      buttons: {
+        improveAi: 'Improve with AI',
+        edit: 'Edit',
+        delete: 'Delete'
+      },
+      empty: 'No prompts in database.'
     }
   }
 };
