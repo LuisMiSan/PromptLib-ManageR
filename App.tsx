@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, CheckCircle2 } from 'lucide-react';
 import { PromptTable } from './components/PromptTable';
 import { PromptForm } from './components/PromptModal';
 import { AdminPanel } from './components/AdminPanel';
@@ -17,7 +17,17 @@ const getCategoryIcon = (category: string) => {
 };
 
 function App() {
-  const [prompts, setPrompts] = useState<PromptEntry[]>(MOCK_PROMPTS);
+  // Initialize state from LocalStorage or fallback to MOCK_PROMPTS
+  const [prompts, setPrompts] = useState<PromptEntry[]>(() => {
+    try {
+      const savedData = localStorage.getItem('promptLibData');
+      return savedData ? JSON.parse(savedData) : MOCK_PROMPTS;
+    } catch (error) {
+      console.error("Failed to load prompts from localStorage", error);
+      return MOCK_PROMPTS;
+    }
+  });
+
   const [view, setView] = useState<'list' | 'form' | 'admin'>('list');
   const [editingPrompt, setEditingPrompt] = useState<PromptEntry | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,10 +36,54 @@ function App() {
   // Refs for focus management
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categorySelectRef = useRef<HTMLSelectElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Language State - Default to Spanish ('es')
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const t = TRANSLATIONS[lang];
+
+  // Persistence: Save to LocalStorage whenever prompts change
+  useEffect(() => {
+    localStorage.setItem('promptLibData', JSON.stringify(prompts));
+  }, [prompts]);
+
+  // DB Handlers (Global)
+  const handleExportDB = () => {
+    const dataStr = JSON.stringify(prompts, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `promptlib_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (Array.isArray(json) && json.every(item => item.id && item.name)) {
+             if(confirm(lang === 'es' ? "Esto reemplazará la base de datos actual. ¿Continuar?" : "This will replace the current database. Continue?")) {
+               setPrompts(json);
+             }
+        } else {
+             alert("Format invalid.");
+        }
+      } catch (err) { console.error(err); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
 
   // Filter Logic
   const filteredPrompts = useMemo(() => {
@@ -155,9 +209,39 @@ function App() {
                   PromptLib <span className="text-cyan-500">Manager</span>
                 </span>
               </h1>
+              {/* Database Status Indicator */}
+              <div className="flex items-center gap-1.5 mt-1">
+                 <CheckCircle2 size={10} className="text-green-500" />
+                 <span className="text-[10px] text-slate-500 font-mono tracking-tight">{t.app.saved} (Local)</span>
+              </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {/* Permanent Database Actions */}
+              <div className="hidden md:flex items-center gap-1 bg-[#1e293b] p-1 rounded-lg border border-slate-700 mr-2">
+                 <button 
+                   onClick={handleExportDB}
+                   className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-950/30 rounded-md transition-all"
+                   title={t.app.backupDesc}
+                 >
+                   <Download size={16} />
+                 </button>
+                 <button 
+                   onClick={handleImportClick}
+                   className="p-2 text-slate-400 hover:text-purple-400 hover:bg-purple-950/30 rounded-md transition-all"
+                   title={t.app.restoreDesc}
+                 >
+                   <UploadCloud size={16} />
+                 </button>
+                 <input 
+                   type="file" 
+                   ref={importInputRef} 
+                   onChange={handleFileImport} 
+                   accept=".json" 
+                   className="hidden" 
+                 />
+              </div>
+
               {/* Admin Button */}
               <button 
                 onClick={handleAdminClick}
@@ -180,7 +264,7 @@ function App() {
               {view === 'list' && (
                 <button 
                   onClick={handleCreate}
-                  className="flex items-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 px-4 py-2 rounded-lg transition-all font-semibold backdrop-blur-sm group"
+                  className="flex items-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 px-4 py-2 rounded-lg transition-all font-semibold backdrop-blur-sm group ml-2"
                 >
                   <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
                   <span>{t.app.newPrompt}</span>

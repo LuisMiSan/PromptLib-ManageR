@@ -69,6 +69,9 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Gestor',
       searchPlaceholder: 'Buscar en la base de datos...',
       allCategories: 'Todas las Categorías',
+      saved: 'Auto-guardado activo',
+      backupDesc: 'Descargar Base de Datos (JSON)',
+      restoreDesc: 'Restaurar Base de Datos',
       stats: {
         total: 'Total Prompts',
         categories: 'Categorías',
@@ -143,7 +146,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
     },
     admin: {
       title: 'Gestor de Base de Datos',
-      subtitle: 'Acceso directo y optimización de prompts',
+      subtitle: 'Acceso directo, backups y optimización',
       columns: {
         name: 'Nombre del Prompt',
         category: 'Categoría',
@@ -153,9 +156,13 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       buttons: {
         improveAi: 'Mejorar con IA',
         edit: 'Editar',
-        delete: 'Eliminar'
+        delete: 'Eliminar',
+        export: 'Exportar Backup',
+        import: 'Importar Backup',
+        reset: 'Resetear Fábrica'
       },
-      empty: 'No hay prompts en la base de datos.'
+      empty: 'No hay prompts en la base de datos.',
+      dataManagement: 'Gestión de Datos'
     }
   },
   en: {
@@ -167,6 +174,9 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Lib Manager',
       searchPlaceholder: 'Search database...',
       allCategories: 'All Categories',
+      saved: 'Auto-save active',
+      backupDesc: 'Download Database (JSON)',
+      restoreDesc: 'Restore Database',
       stats: {
         total: 'Total Units',
         categories: 'Categories',
@@ -241,7 +251,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
     },
     admin: {
       title: 'Database Manager',
-      subtitle: 'Direct access and prompt optimization',
+      subtitle: 'Direct access, backups and optimization',
       columns: {
         name: 'Prompt Name',
         category: 'Category',
@@ -251,9 +261,13 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       buttons: {
         improveAi: 'Improve with AI',
         edit: 'Edit',
-        delete: 'Delete'
+        delete: 'Delete',
+        export: 'Export JSON',
+        import: 'Import JSON',
+        reset: 'Factory Reset'
       },
-      empty: 'No prompts in database.'
+      empty: 'No prompts in database.',
+      dataManagement: 'Data Management'
     }
   }
 };

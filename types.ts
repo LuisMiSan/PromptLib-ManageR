@@ -43,6 +43,9 @@ export interface TranslationDictionary {
     title: string;
     searchPlaceholder: string;
     allCategories: string;
+    saved: string;
+    backupDesc: string;
+    restoreDesc: string;
     stats: {
       total: string;
       categories: string;
@@ -128,7 +131,11 @@ export interface TranslationDictionary {
       improveAi: string;
       edit: string;
       delete: string;
+      export: string;
+      import: string;
+      reset: string;
     };
     empty: string;
+    dataManagement: string;
   };
 }
