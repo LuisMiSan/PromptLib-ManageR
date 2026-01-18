@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Shield, Database, Trash2, Edit2, BrainCircuit, Download, Upload, RotateCcw } from 'lucide-react';
 import { PromptEntry, TranslationDictionary } from '../types';
 import { MOCK_PROMPTS } from '../constants';
+import { storageService } from '../services/storageService';
 
 interface AdminPanelProps {
   prompts: PromptEntry[];
@@ -36,12 +37,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Strict Validation: prevent loading images as JSON
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      alert("Error: Solo se permiten archivos .json para importar backups. Si intentas analizar una imagen, usa la opción 'Nuevo Prompt'.");
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target?.result as string);
         if (Array.isArray(json)) {
-           // Simple validation: check if items have IDs and names
+           // Simple validation
            const valid = json.every(item => item.id && item.name);
            if (valid) {
              if(confirm("Esto reemplazará todos tus prompts actuales. ¿Continuar?")) {
@@ -54,11 +62,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
         }
       } catch (err) {
         console.error(err);
-        alert("Error al leer el archivo JSON.");
+        alert("Error al leer el archivo JSON. Asegúrate de no haber seleccionado una imagen.");
       }
     };
     reader.readAsText(file);
-    // Reset file input
     e.target.value = ''; 
   };
 
@@ -66,7 +73,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
   const handleReset = () => {
     if (confirm("¿Estás seguro? Esto borrará tus datos y restaurará los ejemplos iniciales.")) {
       setPrompts(MOCK_PROMPTS);
-      localStorage.removeItem('promptLibData'); // Clear storage to force reload next time or let state sync
+      storageService.resetStorage();
     }
   };
 

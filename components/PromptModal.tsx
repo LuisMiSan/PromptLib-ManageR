@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Loader2, Plus, Upload, BrainCircuit, Save, X, Lightbulb, Volume2, StopCircle, Cpu, Edit2 } from 'lucide-react';
+import { Loader2, Plus, Upload, BrainCircuit, Save, X, Lightbulb, Volume2, Cpu, Edit2 } from 'lucide-react';
 import { PromptEntry, PromptFormData, Category, AIModel, TranslationDictionary } from '../types';
 import { optimizePromptContent, generateTags, extractPromptFromFile, generateSpeechFromText } from '../services/geminiService';
 

@@ -74,6 +74,13 @@ const fileToDocxText = async (file: File): Promise<string> => {
   throw new Error("La librería Mammoth no está cargada.");
 };
 
+// Helper: Clean JSON string from Markdown code blocks
+const cleanJSON = (text: string) => {
+  if (!text) return "{}";
+  // Remove ```json and ``` fences if present
+  return text.replace(/```json\s*|\s*```/g, "").trim();
+};
+
 // FEATURE: Think more when needed (Reasoning)
 export const optimizePromptContent = async (currentData: PromptFormData): Promise<string> => {
   try {
@@ -210,7 +217,7 @@ export const extractPromptFromFile = async (file: File): Promise<Partial<PromptF
     });
 
     if (response.text) {
-      return JSON.parse(response.text);
+      return JSON.parse(cleanJSON(response.text));
     }
     throw new Error("No response text from Gemini");
 

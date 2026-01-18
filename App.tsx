@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, Database, Loader2, AlertTriangle } from 'lucide-react';
 import { PromptTable } from './components/PromptTable';
 import { PromptForm } from './components/PromptModal';
 import { AdminPanel } from './components/AdminPanel';
 import { PromptEntry, PromptFormData, Category } from './types';
-import { MOCK_PROMPTS, TRANSLATIONS } from './constants';
+import { TRANSLATIONS } from './constants';
+import { storageService } from './services/storageService';
 
 // Helper to get icon for category
 const getCategoryIcon = (category: string) => {
@@ -17,16 +18,13 @@ const getCategoryIcon = (category: string) => {
 };
 
 function App() {
-  // Initialize state from LocalStorage or fallback to MOCK_PROMPTS
-  const [prompts, setPrompts] = useState<PromptEntry[]>(() => {
-    try {
-      const savedData = localStorage.getItem('promptLibData');
-      return savedData ? JSON.parse(savedData) : MOCK_PROMPTS;
-    } catch (error) {
-      console.error("Failed to load prompts from localStorage", error);
-      return MOCK_PROMPTS;
-    }
-  });
+  // DB Status: 'init' | 'loading' | 'ready' | 'error'
+  // 'ready' is the ONLY state where autosave is allowed.
+  const [dbStatus, setDbStatus] = useState<'init' | 'loading' | 'ready' | 'error'>('init');
+  const [prompts, setPrompts] = useState<PromptEntry[]>([]);
+  
+  // Persistence State
+  const [isPersisted, setIsPersisted] = useState(false);
 
   const [view, setView] = useState<'list' | 'form' | 'admin'>('list');
   const [editingPrompt, setEditingPrompt] = useState<PromptEntry | undefined>(undefined);
@@ -42,10 +40,51 @@ function App() {
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const t = TRANSLATIONS[lang];
 
-  // Persistence: Save to LocalStorage whenever prompts change
+  // 1. INITIAL LOAD
   useEffect(() => {
-    localStorage.setItem('promptLibData', JSON.stringify(prompts));
-  }, [prompts]);
+    const initApp = async () => {
+      setDbStatus('loading');
+      
+      // Check persistence
+      const persisted = await storageService.init();
+      setIsPersisted(persisted);
+
+      // Load Data
+      try {
+        const loadedPrompts = await storageService.loadPrompts();
+        setPrompts(loadedPrompts);
+        // CRITICAL: Only set status to 'ready' if load succeeded.
+        // This enables the autosave effect below.
+        setDbStatus('ready'); 
+      } catch (e) {
+        console.error("Critical error loading DB:", e);
+        // CRITICAL: Set error state. This prevents autosave from running and wiping DB with empty state.
+        setDbStatus('error');
+      }
+    };
+    initApp();
+  }, []);
+
+  // 2. AUTOSAVE EFFECT
+  // Only runs when dbStatus is 'ready'. 
+  // If dbStatus is 'error' or 'loading', this never runs, preserving data integrity.
+  useEffect(() => {
+    if (dbStatus === 'ready') {
+      const saveToDb = async () => {
+        try {
+           await storageService.savePrompts(prompts);
+        } catch (e) {
+           console.error("Autosave failed:", e);
+           // Optional: setDbStatus('error') if we want to stop trying, 
+           // but usually we want to keep trying to save.
+        }
+      };
+      
+      // Debounce slightly to prevent thrashing
+      const timeoutId = setTimeout(saveToDb, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [prompts, dbStatus]);
 
   // DB Handlers (Global)
   const handleExportDB = () => {
@@ -67,6 +106,15 @@ function App() {
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      alert(lang === 'es' 
+        ? "Error: El archivo seleccionado no parece ser un backup (.json)." 
+        : "Error: Selected file is not a valid JSON backup.");
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -76,9 +124,12 @@ function App() {
                setPrompts(json);
              }
         } else {
-             alert("Format invalid.");
+             alert(lang === 'es' ? "Formato de archivo inválido." : "Invalid file format.");
         }
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error("JSON Parse Error:", err);
+        alert(lang === 'es' ? "Error al leer JSON." : "Error reading JSON.");
+      }
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -169,6 +220,39 @@ function App() {
     models: new Set(prompts.map(p => p.recommendedAi)).size
   };
 
+  // ERROR STATE VIEW
+  if (dbStatus === 'error') {
+    return (
+      <div className="min-h-screen bg-[#0B1120] flex flex-col items-center justify-center text-red-500 gap-6 p-4 text-center">
+        <div className="bg-red-900/20 p-6 rounded-full border border-red-500/30 animate-pulse">
+           <AlertTriangle size={64} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Error de Base de Datos</h1>
+          <p className="text-slate-400 max-w-md">
+            No se pudo cargar la base de datos local. Hemos detenido el guardado automático para proteger tus datos.
+          </p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-500 transition-colors font-bold"
+        >
+          Recargar Aplicación
+        </button>
+      </div>
+    );
+  }
+
+  // LOADING STATE VIEW
+  if (dbStatus === 'init' || dbStatus === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#0B1120] flex flex-col items-center justify-center text-cyan-500 gap-4">
+        <Loader2 size={48} className="animate-spin" />
+        <span className="font-mono text-sm tracking-widest uppercase animate-pulse">Initializing IndexedDB...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0B1120] font-sans text-slate-300 selection:bg-cyan-500/30 selection:text-cyan-200">
       
@@ -209,11 +293,19 @@ function App() {
                   PromptLib <span className="text-cyan-500">Manager</span>
                 </span>
               </h1>
-              {/* Database Status Indicator */}
-              <div className="flex items-center gap-1.5 mt-1">
-                 <CheckCircle2 size={10} className="text-green-500" />
-                 <span className="text-[10px] text-slate-500 font-mono tracking-tight">{t.app.saved} (Local)</span>
+              
+              {/* Database Status Indicator - IMPROVED */}
+              <div className="flex items-center gap-2 mt-1 px-2 py-0.5 rounded-full bg-[#1e293b] border border-slate-700 w-fit">
+                 {isPersisted ? (
+                   <Database size={10} className="text-emerald-400" />
+                 ) : (
+                   <Database size={10} className="text-blue-400" />
+                 )}
+                 <span className={`text-[10px] font-mono tracking-tight ${isPersisted ? 'text-emerald-400' : 'text-blue-400'}`}>
+                   {t.app.db.indexed}
+                 </span>
               </div>
+
             </div>
             
             <div className="flex items-center gap-3">
@@ -379,7 +471,6 @@ function App() {
             <PromptTable 
               prompts={filteredPrompts} 
               onEdit={handleEdit} 
-              onDelete={handleDelete}
               dict={t.table}
             />
           </div>

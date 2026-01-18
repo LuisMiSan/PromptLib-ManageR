@@ -69,7 +69,12 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Gestor',
       searchPlaceholder: 'Buscar en la base de datos...',
       allCategories: 'Todas las Categorías',
-      saved: 'Auto-guardado activo',
+      db: {
+        local: 'Local (Temp)',
+        persistent: 'Persistente (Perm)',
+        connecting: 'Conectando...',
+        indexed: 'IndexedDB (Activa)'
+      },
       backupDesc: 'Descargar Base de Datos (JSON)',
       restoreDesc: 'Restaurar Base de Datos',
       stats: {
@@ -89,9 +94,10 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       emptyDesc: 'Inicializa tu primer protocolo para comenzar.',
       entriesLoaded: 'ENTRADAS CARGADAS',
       systemReady: 'SISTEMA LISTO',
-      copy: 'Copiar Código',
+      copy: 'Copiar',
       copied: 'Copiado',
-      close: 'Cerrar'
+      close: 'Cerrar',
+      openAction: 'Editar / Usar'
     },
     form: {
       editTitle: 'Modificar Protocolo',
@@ -174,7 +180,12 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Lib Manager',
       searchPlaceholder: 'Search database...',
       allCategories: 'All Categories',
-      saved: 'Auto-save active',
+      db: {
+        local: 'Local (Temp)',
+        persistent: 'Persistent (Perm)',
+        connecting: 'Connecting...',
+        indexed: 'IndexedDB (Active)'
+      },
       backupDesc: 'Download Database (JSON)',
       restoreDesc: 'Restore Database',
       stats: {
@@ -194,9 +205,10 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       emptyDesc: 'Initialize your first protocol prompt to begin.',
       entriesLoaded: 'ENTRIES LOADED',
       systemReady: 'SYSTEM READY',
-      copy: 'Copy Source',
+      copy: 'Copy',
       copied: 'Copied',
-      close: 'Close'
+      close: 'Close',
+      openAction: 'Edit / Use'
     },
     form: {
       editTitle: 'Modify Protocol',

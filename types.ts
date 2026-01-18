@@ -43,7 +43,12 @@ export interface TranslationDictionary {
     title: string;
     searchPlaceholder: string;
     allCategories: string;
-    saved: string;
+    db: {
+      local: string;
+      persistent: string;
+      connecting: string;
+      indexed: string;
+    };
     backupDesc: string;
     restoreDesc: string;
     stats: {
@@ -66,6 +71,7 @@ export interface TranslationDictionary {
     copy: string;
     copied: string;
     close: string;
+    openAction: string; // New field for the primary button
   };
   form: {
     editTitle: string;
