@@ -5,7 +5,6 @@ import { PromptEntry, Category, TranslationDictionary } from '../types';
 interface PromptTableProps {
   prompts: PromptEntry[];
   onEdit: (prompt: PromptEntry) => void;
-  // onDelete removed as it is not used in the Card view
   dict: TranslationDictionary['table'];
 }
 
@@ -133,11 +132,6 @@ export const PromptTable: React.FC<PromptTableProps> = ({ prompts, onEdit, dict 
   const displayCategories = categories.filter(cat => categorizedPrompts[cat]?.length > 0);
 
   return (
-    /* 
-      USO DE COLUMNS-1 (Mobile) y COLUMNS-2 (Tablet/Desktop)
-      Esto crea un layout tipo "Masonry" donde las categorías se organizan
-      en dos columnas verticales fluyendo naturalmente.
-    */
     <div className="columns-1 md:columns-2 gap-6 space-y-6 pb-12 animate-slideUp">
       {displayCategories.length > 0 ? (
         displayCategories.map(cat => {

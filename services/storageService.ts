@@ -57,7 +57,6 @@ export const storageService = {
     if (navigator.storage && navigator.storage.persist) {
       try {
         const isPersisted = await navigator.storage.persist();
-        console.log(`Persistent storage granted: ${isPersisted}`);
         return isPersisted;
       } catch (err) {
         console.warn("Could not request persistent storage", err);
@@ -80,10 +79,8 @@ export const storageService = {
           const results = request.result;
           // Si es la primera vez (vacío), cargamos mocks
           if (!results || results.length === 0) {
-             console.log("Database empty, returning mocks.");
              resolve(MOCK_PROMPTS);
           } else {
-             console.log(`Loaded ${results.length} prompts from DB.`);
              resolve(results);
           }
         };
@@ -111,8 +108,6 @@ export const storageService = {
         const clearRequest = store.clear();
 
         clearRequest.onsuccess = () => {
-           // Usamos un contador o promesa simple para asegurarnos que todos los put se disparen
-           // aunque IndexedDB gestiona la transacción automáticamente
            prompts.forEach(prompt => {
              store.put(prompt);
            });
@@ -124,7 +119,6 @@ export const storageService = {
         }
 
         transaction.oncomplete = () => {
-          console.log(`Successfully saved ${prompts.length} prompts to DB.`);
           resolve();
         };
 
@@ -144,7 +138,6 @@ export const storageService = {
     const db = await storageService.getDB();
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     transaction.objectStore(STORE_NAME).clear();
-    console.log("Database cleared.");
   },
 
   checkCloudConnection: async (): Promise<boolean> => {
