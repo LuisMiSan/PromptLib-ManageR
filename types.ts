@@ -1,3 +1,4 @@
+
 export enum AIModel {
   ChatGPT = 'ChatGPT',
   Gemini = 'Gemini 2.5 Flash',
@@ -108,6 +109,7 @@ export interface TranslationDictionary {
       optimize: string;
       optimizing: string;
       add: string;
+      pdf: string;
     };
     placeholders: {
       name: string;
@@ -138,7 +140,9 @@ export interface TranslationDictionary {
       edit: string;
       delete: string;
       export: string;
-      import: string;
+      import: string; // Restore Backup
+      smartImport: string; // New AI Import
+      processing: string;
       reset: string;
     };
     empty: string;

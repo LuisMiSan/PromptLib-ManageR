@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
-import { Shield, Database, Trash2, Edit2, BrainCircuit, Download, Upload, RotateCcw } from 'lucide-react';
-import { PromptEntry, TranslationDictionary } from '../types';
+import React, { useRef, useState } from 'react';
+import { Shield, Database, Trash2, Edit2, BrainCircuit, Download, Upload, RotateCcw, FileJson, Sparkles, Loader2 } from 'lucide-react';
+import { PromptEntry, TranslationDictionary, Category, AIModel, PromptFormData } from '../types';
 import { MOCK_PROMPTS } from '../constants';
 import { storageService } from '../services/storageService';
+import { extractMultiplePromptsFromFile } from '../services/geminiService';
 
 interface AdminPanelProps {
   prompts: PromptEntry[];
@@ -14,6 +15,8 @@ interface AdminPanelProps {
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onEdit, onDelete, dict }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const smartImportRef = useRef<HTMLInputElement>(null);
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
   // 1. Export Function
   const handleExport = () => {
@@ -28,7 +31,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
     document.body.removeChild(link);
   };
 
-  // 2. Import Function
+  // 2. Import Function (JSON Restore)
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
@@ -37,9 +40,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Strict Validation: prevent loading images as JSON
     if (!file.name.toLowerCase().endsWith('.json')) {
-      alert("Error: Solo se permiten archivos .json para importar backups. Si intentas analizar una imagen, usa la opción 'Nuevo Prompt'.");
+      alert("Error: Solo se permiten archivos .json para restaurar backups.");
       e.target.value = '';
       return;
     }
@@ -49,12 +51,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
       try {
         const json = JSON.parse(event.target?.result as string);
         if (Array.isArray(json)) {
-           // Simple validation
            const valid = json.every(item => item.id && item.name);
            if (valid) {
              if(confirm("Esto reemplazará todos tus prompts actuales. ¿Continuar?")) {
                setPrompts(json);
-               alert("Importación exitosa.");
+               alert("Restauración exitosa.");
              }
            } else {
              alert("El archivo JSON no tiene el formato correcto.");
@@ -62,14 +63,57 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
         }
       } catch (err) {
         console.error(err);
-        alert("Error al leer el archivo JSON. Asegúrate de no haber seleccionado una imagen.");
+        alert("Error al leer el archivo JSON.");
       }
     };
     reader.readAsText(file);
     e.target.value = ''; 
   };
 
-  // 3. Factory Reset
+  // 3. Smart Import (AI Batch)
+  const handleSmartImportClick = () => {
+    smartImportRef.current?.click();
+  }
+
+  const handleSmartImportChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingBatch(true);
+    try {
+       const extractedData = await extractMultiplePromptsFromFile(file);
+       
+       if (extractedData.length > 0) {
+          const newPrompts: PromptEntry[] = extractedData.map((data: Partial<PromptFormData>) => ({
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            category: Category.Other, // Default, user can organize later
+            name: data.name || "Imported Prompt",
+            objective: data.objective || "No objective detected",
+            inputType: "Texto",
+            persona: data.persona || "General AI",
+            recommendedAi: AIModel.Gemini,
+            description: `Importado en lote desde ${file.name}`,
+            content: data.content || "",
+            variables: [], // Simple import doesn't auto-extract vars yet to save tokens, or we could add it
+            usageExamples: "",
+            tags: data.tags || ["Imported"],
+          }));
+
+          setPrompts(prev => [...newPrompts, ...prev]); // Add to top
+          alert(`¡Éxito! Se han importado ${newPrompts.length} prompts a tu biblioteca.`);
+       } else {
+          alert("No se detectaron prompts válidos en el archivo.");
+       }
+    } catch (error) {
+      console.error(error);
+      alert("Ocurrió un error al procesar el archivo con IA.");
+    } finally {
+      setIsProcessingBatch(false);
+      if (smartImportRef.current) smartImportRef.current.value = '';
+    }
+  }
+
+  // 4. Factory Reset
   const handleReset = () => {
     if (confirm("¿Estás seguro? Esto borrará tus datos y restaurará los ejemplos iniciales.")) {
       setPrompts(MOCK_PROMPTS);
@@ -104,6 +148,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
            {dict.dataManagement}
         </h3>
         <div className="flex flex-wrap gap-4">
+           {/* Smart Import (AI) */}
+           <button 
+             onClick={handleSmartImportClick}
+             disabled={isProcessingBatch}
+             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow-lg shadow-emerald-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+           >
+             {isProcessingBatch ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16} />}
+             {isProcessingBatch ? dict.buttons.processing : dict.buttons.smartImport}
+           </button>
+           <input 
+             type="file" 
+             ref={smartImportRef} 
+             onChange={handleSmartImportChange} 
+             accept=".pdf,.txt,.md,.doc,.docx" 
+             className="hidden" 
+           />
+
+           <div className="h-10 w-px bg-slate-700 mx-2 hidden md:block"></div>
+
            {/* Export */}
            <button 
              onClick={handleExport}
@@ -113,12 +176,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
              {dict.buttons.export}
            </button>
 
-           {/* Import */}
+           {/* Restore JSON */}
            <button 
              onClick={handleImportClick}
              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl hover:bg-slate-700 text-slate-300 font-medium transition-colors"
            >
-             <Upload size={16} />
+             <FileJson size={16} />
              {dict.buttons.import}
            </button>
            <input 
@@ -138,6 +201,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
              {dict.buttons.reset}
            </button>
         </div>
+        <p className="text-xs text-slate-500 mt-4 ml-1">
+           * <strong>{dict.buttons.smartImport}</strong>: Usa IA para extraer múltiples prompts de un archivo PDF, Word o TXT.<br/>
+           * <strong>{dict.buttons.import}</strong>: Restaura una copia de seguridad exacta (.json).
+        </p>
       </div>
 
       {/* Database Table */}

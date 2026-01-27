@@ -41,7 +41,6 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
     reader.onload = () => {
       const result = reader.result as string;
-      // Remove data url prefix (e.g. "data:image/png;base64,")
       const base64 = result.split(',')[1];
       resolve(base64);
     };
@@ -59,7 +58,7 @@ const fileToText = (file: File): Promise<string> => {
   });
 };
 
-// Helper: Extract text from DOCX using Mammoth (loaded in index.html)
+// Helper: Extract text from DOCX using Mammoth
 const fileToDocxText = async (file: File): Promise<string> => {
   if ((window as any).mammoth) {
     try {
@@ -74,121 +73,98 @@ const fileToDocxText = async (file: File): Promise<string> => {
   throw new Error("La librería Mammoth no está cargada.");
 };
 
-// Helper: Clean JSON string from Markdown code blocks
 const cleanJSON = (text: string) => {
   if (!text) return "{}";
-  // Remove ```json and ``` fences if present
   return text.replace(/```json\s*|\s*```/g, "").trim();
 };
 
-// FEATURE: Think more when needed (Reasoning)
 export const optimizePromptContent = async (currentData: PromptFormData): Promise<string> => {
   try {
     const promptInstructions = `
-      Actúa como un ingeniero de prompts experto y meticuloso.
-      Tengo un borrador de un prompt o una idea para un prompt con los siguientes detalles:
+      Actúa como un ingeniero de prompts experto.
+      Objetivo: ${currentData.objective}
+      Rol: ${currentData.persona}
+      Contenido: ${currentData.content || "No especificado"}
       
-      - Objetivo: ${currentData.objective}
-      - Rol/Persona: ${currentData.persona}
-      - Contenido actual: ${currentData.content || "No especificado aún"}
-      
-      Por favor, piensa paso a paso cómo mejorar esto. Escribe una versión optimizada y profesional de este prompt. 
-      Usa técnicas de prompt engineering (claridad, contexto, pasos, formato de salida).
-      Solo devuelve el texto del prompt optimizado, sin explicaciones adicionales.
+      Escribe una versión optimizada y profesional de este prompt. 
+      Solo devuelve el texto optimizado.
     `;
 
-    // Usamos Gemini 3 Pro con Thinking Budget para tareas complejas de razonamiento
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: promptInstructions,
       config: {
-        thinkingConfig: {
-          thinkingBudget: 32768 // Max thinking budget for heavy reasoning
-        }
+        thinkingConfig: { thinkingBudget: 1024 } 
       }
     });
 
     return response.text || currentData.content;
   } catch (error) {
-    console.error("Error optimizing prompt with Gemini:", error);
+    console.error("Error optimizing:", error);
     throw error;
   }
 };
 
-// FEATURE: Fast AI responses (Low Latency)
 export const generateTags = async (objective: string, category: string): Promise<string[]> => {
   try {
     const promptInstructions = `
-      Genera 3 etiquetas (tags) cortas y relevantes para un prompt de IA basado en:
-      Categoría: ${category}
-      Objetivo: ${objective}
-      
-      Devuelve solo las etiquetas separadas por comas. Ejemplo: "Email, Ventas, Formal".
+      Genera 3 etiquetas cortas para: ${category}, ${objective}.
+      Separadas por comas.
     `;
-
-    // Usamos Gemini Flash Lite para respuestas rápidas (Low Latency)
     const response = await ai.models.generateContent({
       model: 'gemini-flash-lite-latest', 
       contents: promptInstructions,
     });
-
     const text = response.text || "";
     return text.split(',').map(tag => tag.trim()).filter(t => t.length > 0);
   } catch (error) {
-    console.error("Error generating tags:", error);
     return ["AI", "Productivity"];
   }
 };
 
-// FEATURE: Analyze images (Multimodal with Vision)
-export const extractPromptFromFile = async (file: File): Promise<Partial<PromptFormData>> => {
-  try {
-    let contentPart;
-    let modelToUse = 'gemini-2.5-flash'; // Default for text/docs
-
-    // 1. Handle Images (Use Gemini 3 Pro for advanced vision as requested)
-    if (file.type.startsWith('image/')) {
-      modelToUse = 'gemini-3-pro-preview';
-      const base64Data = await fileToBase64(file);
-      contentPart = {
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type
-        }
+const getFileContentPart = async (file: File): Promise<any> => {
+  if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+     const base64Data = await fileToBase64(file);
+     return {
+        inlineData: { data: base64Data, mimeType: file.type }
       };
-    } 
-    // 2. Handle PDF
-    else if (file.type === 'application/pdf') {
-      const base64Data = await fileToBase64(file);
-      contentPart = {
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type
-        }
-      };
-    }
-    // 3. Handle Word Documents (.docx)
-    else if (file.name.endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+  } else if (file.name.endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       const docText = await fileToDocxText(file);
-      contentPart = { text: `Contenido del archivo Word:\n${docText}` };
-    }
-    // 4. Handle Text Files
-    else {
+      return { text: `Contenido Word:\n${docText}` };
+  } else {
       const textContent = await fileToText(file);
-      contentPart = { text: `Contenido del archivo:\n${textContent}` };
-    }
+      return { text: `Contenido:\n${textContent}` };
+  }
+};
+
+// --- FUNCIÓN CLAVE MEJORADA PARA BATCH ---
+export const extractMultiplePromptsFromFile = async (file: File): Promise<Partial<PromptFormData>[]> => {
+  try {
+    const contentPart = await getFileContentPart(file);
+    const modelToUse = 'gemini-3-pro-preview'; 
 
     const promptInstruction = `
-      Analiza el archivo proporcionado. Parece contener un prompt, una idea para un prompt, o un documento del cual se puede extraer un prompt útil.
+      TAREA CRÍTICA: EXTRACCIÓN Y SEPARACIÓN DE PROMPTS.
+
+      El documento contiene una LISTA NUMERADA de prompts (ej: "1. Título", "2. Título").
       
-      Tu tarea es extraer la información y estructurarla para una biblioteca de prompts.
-      1. Identifica el objetivo principal.
-      2. Identifica el rol o persona sugerida.
-      3. Extrae o redacta el contenido del prompt.
-      4. Sugiere 3 tags relevantes.
-      5. Sugiere un nombre corto para el prompt.
+      TU OBJETIVO ES SEPARARLOS. NO LOS FUSIONES.
+      Si el documento dice:
+      "1. Prompt A..."
+      "2. Prompt B..."
       
-      Responde estrictamente en formato JSON.
+      Debes devolver UN ARRAY JSON con 2 objetos.
+      
+      Estructura para cada objeto:
+      {
+        "name": "El título que aparece junto al número (sin el número)",
+        "objective": "Objetivo deducido",
+        "persona": "Rol deducido",
+        "content": "EL TEXTO INTEGRO DEL PROMPT. Solo el contenido de ese número.",
+        "tags": ["tag1", "tag2"]
+      }
+
+      Analiza el documento completo y extrae TODOS los items numerados como entradas independientes.
     `;
 
     const response = await ai.models.generateContent({
@@ -198,6 +174,50 @@ export const extractPromptFromFile = async (file: File): Promise<Partial<PromptF
         { text: promptInstruction }
       ],
       config: {
+        thinkingConfig: { thinkingBudget: 16000 }, // Pensar profundo para segmentar bien
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              objective: { type: Type.STRING },
+              persona: { type: Type.STRING },
+              content: { type: Type.STRING },
+              tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+            },
+            required: ['name', 'content']
+          }
+        }
+      }
+    });
+
+    if (response.text) {
+      const parsed = JSON.parse(cleanJSON(response.text));
+      return Array.isArray(parsed) ? parsed : [parsed];
+    }
+    throw new Error("No response");
+
+  } catch (error) {
+    console.error("Batch extraction error:", error);
+    throw error;
+  }
+};
+
+// Mantenemos esta por compatibilidad, pero internamente llamará a la lógica de batch si detecta listas?
+// No, mejor mantenerla simple para casos donde el usuario solo quiere extraer 1 cosa específica.
+export const extractPromptFromFile = async (file: File): Promise<Partial<PromptFormData>> => {
+  // Alias to batch but taking first one to be safe, or separate logic.
+  // We keep separate logic for simplicity in "Single Prompt Mode"
+  try {
+    const contentPart = await getFileContentPart(file);
+    const promptInstruction = `Extrae 1 prompt de este archivo en JSON: name, objective, persona, content, tags.`;
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [contentPart, { text: promptInstruction }],
+      config: {
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -206,66 +226,34 @@ export const extractPromptFromFile = async (file: File): Promise<Partial<PromptF
             objective: { type: Type.STRING },
             persona: { type: Type.STRING },
             content: { type: Type.STRING },
-            tags: { 
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
-          },
-          required: ['name', 'objective', 'content', 'tags']
+            tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
         }
       }
     });
-
-    if (response.text) {
-      return JSON.parse(cleanJSON(response.text));
-    }
-    throw new Error("No response text from Gemini");
-
-  } catch (error) {
-    console.error("Error extracting from file:", error);
-    throw error;
-  }
+    if (response.text) return JSON.parse(cleanJSON(response.text));
+    throw new Error("No data");
+  } catch (e) { throw e; }
 };
 
-// FEATURE: Generate speech (TTS)
 export const generateSpeechFromText = async (text: string): Promise<void> => {
   if (!text) return;
-
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
       config: {
         responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' }, // 'Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'
-          },
-        },
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
       },
     });
-
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("No audio data received");
-
-    const outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-    const outputNode = outputAudioContext.createGain();
-    
-    const audioBuffer = await decodeAudioData(
-      decode(base64Audio),
-      outputAudioContext,
-      24000,
-      1,
-    );
-    
-    const source = outputAudioContext.createBufferSource();
+    if (!base64Audio) return;
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
+    const audioBuffer = await decodeAudioData(decode(base64Audio), ctx, 24000, 1);
+    const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(outputNode);
-    outputNode.connect(outputAudioContext.destination);
+    source.connect(ctx.destination);
     source.start();
-
-  } catch (error) {
-    console.error("Error generating speech:", error);
-    throw error;
-  }
+  } catch (error) { console.error("TTS Error", error); }
 };

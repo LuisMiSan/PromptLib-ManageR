@@ -133,7 +133,8 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         audioPlaying: 'AUDIO...',
         optimize: 'MEJORA IA',
         optimizing: 'OPTIMIZANDO...',
-        add: 'Añadir'
+        add: 'Añadir',
+        pdf: 'DESCARGAR PDF'
       },
       placeholders: {
         name: 'Ej: Generador de Contenido Viral',
@@ -164,10 +165,12 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         edit: 'Editar',
         delete: 'Eliminar',
         export: 'Exportar Backup',
-        import: 'Importar Backup',
+        import: 'Restaurar JSON',
+        smartImport: 'Importar Lote (AI)',
+        processing: 'PROCESANDO LOTE...',
         reset: 'Resetear Fábrica'
       },
-      empty: 'No hay prompts en la base de datos.',
+      empty: 'No prompts en la base de datos.',
       dataManagement: 'Gestión de Datos'
     }
   },
@@ -244,7 +247,8 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         audioPlaying: 'AUDIO_OUT...',
         optimize: 'AI_ENHANCE',
         optimizing: 'OPTIMIZING...',
-        add: 'Add'
+        add: 'Add',
+        pdf: 'DOWNLOAD PDF'
       },
       placeholders: {
         name: 'Ex: Viral Content Generator',
@@ -275,7 +279,9 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         edit: 'Edit',
         delete: 'Delete',
         export: 'Export JSON',
-        import: 'Import JSON',
+        import: 'Restore JSON',
+        smartImport: 'Batch Import (AI)',
+        processing: 'PROCESSING BATCH...',
         reset: 'Factory Reset'
       },
       empty: 'No prompts in database.',
