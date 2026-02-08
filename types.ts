@@ -34,6 +34,11 @@ export interface PromptEntry {
 
 export type PromptFormData = Omit<PromptEntry, 'id'>;
 
+export interface SupabaseConfig {
+  url: string;
+  key: string;
+}
+
 // Interfaces para el sistema de traducción
 export interface TranslationDictionary {
   app: {
@@ -49,6 +54,7 @@ export interface TranslationDictionary {
       persistent: string;
       connecting: string;
       indexed: string;
+      cloud: string; // New
     };
     backupDesc: string;
     restoreDesc: string;
@@ -72,7 +78,7 @@ export interface TranslationDictionary {
     copy: string;
     copied: string;
     close: string;
-    openAction: string; // New field for the primary button
+    openAction: string; 
   };
   form: {
     editTitle: string;
@@ -140,12 +146,26 @@ export interface TranslationDictionary {
       edit: string;
       delete: string;
       export: string;
-      import: string; // Restore Backup
-      smartImport: string; // New AI Import
+      import: string;
+      smartImport: string;
       processing: string;
       reset: string;
     };
     empty: string;
     dataManagement: string;
   };
+  cloud: { // New Section
+    title: string;
+    desc: string;
+    urlPlaceholder: string;
+    keyPlaceholder: string;
+    connect: string;
+    disconnect: string;
+    sync: string;
+    status: {
+      connected: string;
+      disconnected: string;
+      error: string;
+    }
+  }
 }

@@ -73,7 +73,8 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         local: 'Local (Temp)',
         persistent: 'Persistente (Perm)',
         connecting: 'Conectando...',
-        indexed: 'IndexedDB (Activa)'
+        indexed: 'IndexedDB',
+        cloud: 'Supabase Cloud (Activo)'
       },
       backupDesc: 'Descargar Base de Datos (JSON)',
       restoreDesc: 'Restaurar Base de Datos',
@@ -172,6 +173,20 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       },
       empty: 'No prompts en la base de datos.',
       dataManagement: 'Gestión de Datos'
+    },
+    cloud: {
+      title: 'Conexión a Nube (Supabase)',
+      desc: 'Conecta tu propia base de datos Postgres para sincronización permanente entre dispositivos.',
+      urlPlaceholder: 'https://tu-proyecto.supabase.co',
+      keyPlaceholder: 'Tu anon public key',
+      connect: 'Conectar Cloud',
+      disconnect: 'Desconectar',
+      sync: 'Subir Locales a Nube',
+      status: {
+        connected: 'Conectado a Supabase',
+        disconnected: 'Solo Local (IndexedDB)',
+        error: 'Error de Conexión'
+      }
     }
   },
   en: {
@@ -187,7 +202,8 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         local: 'Local (Temp)',
         persistent: 'Persistent (Perm)',
         connecting: 'Connecting...',
-        indexed: 'IndexedDB (Active)'
+        indexed: 'IndexedDB',
+        cloud: 'Supabase Cloud (Active)'
       },
       backupDesc: 'Download Database (JSON)',
       restoreDesc: 'Restore Database',
@@ -286,6 +302,20 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       },
       empty: 'No prompts in database.',
       dataManagement: 'Data Management'
+    },
+    cloud: {
+      title: 'Cloud Connection (Supabase)',
+      desc: 'Connect your own Postgres database for permanent sync across devices.',
+      urlPlaceholder: 'https://your-project.supabase.co',
+      keyPlaceholder: 'Your anon public key',
+      connect: 'Connect Cloud',
+      disconnect: 'Disconnect',
+      sync: 'Upload Local to Cloud',
+      status: {
+        connected: 'Connected to Supabase',
+        disconnected: 'Local Only (IndexedDB)',
+        error: 'Connection Error'
+      }
     }
   }
 };

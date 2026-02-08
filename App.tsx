@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, Database, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, Database, Loader2, AlertTriangle, Cloud } from 'lucide-react';
 import { PromptTable } from './components/PromptTable';
 import { PromptForm } from './components/PromptModal';
 import { AdminPanel } from './components/AdminPanel';
+import { CloudModal } from './components/CloudModal';
 import { PromptEntry, PromptFormData, Category } from './types';
 import { TRANSLATIONS } from './constants';
 import { storageService } from './services/storageService';
@@ -21,13 +22,18 @@ function App() {
   const [dbStatus, setDbStatus] = useState<'init' | 'loading' | 'ready' | 'error'>('init');
   const [prompts, setPrompts] = useState<PromptEntry[]>([]);
   const [isPersisted, setIsPersisted] = useState(false);
+  const [isCloud, setIsCloud] = useState(false);
+  const [showCloudModal, setShowCloudModal] = useState(false);
+  
   const [view, setView] = useState<'list' | 'form' | 'admin'>('list');
   const [editingPrompt, setEditingPrompt] = useState<PromptEntry | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categorySelectRef = useRef<HTMLSelectElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const t = TRANSLATIONS[lang];
 
@@ -36,6 +42,7 @@ function App() {
       setDbStatus('loading');
       const persisted = await storageService.init();
       setIsPersisted(persisted);
+      setIsCloud(storageService.isCloudActive());
       try {
         const loadedPrompts = await storageService.loadPrompts();
         setPrompts(loadedPrompts);
@@ -107,17 +114,14 @@ function App() {
     });
   }, [prompts, searchQuery, selectedCategory]);
 
-  // UPDATED: Handle single or batch saves
   const handleSave = (data: PromptFormData | PromptFormData[]) => {
     if (Array.isArray(data)) {
-        // BATCH SAVE
         const newPrompts: PromptEntry[] = data.map(item => ({
             ...item,
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5)
         }));
         setPrompts(prev => [...newPrompts, ...prev]);
     } else {
-        // SINGLE SAVE
         if (editingPrompt) {
           setPrompts(prev => prev.map(p => p.id === editingPrompt.id ? { ...data, id: p.id } : p));
         } else {
@@ -143,6 +147,13 @@ function App() {
   const handleTotalClick = () => { setSearchQuery(''); setSelectedCategory('All'); window.scrollTo({ top: 300, behavior: 'smooth' }); };
   const handleCategoryClick = () => { categorySelectRef.current?.focus(); categorySelectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   const handleModelClick = () => { searchInputRef.current?.focus(); searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+
+  const handleCloudConnect = async () => {
+    setIsCloud(storageService.isCloudActive());
+    // Refresh prompts from new source
+    const loaded = await storageService.loadPrompts();
+    setPrompts(loaded);
+  };
 
   const stats = {
     total: prompts.length,
@@ -188,13 +199,19 @@ function App() {
                 <div className="relative"><BookOpen className="text-cyan-400" size={28} /><div className="absolute inset-0 bg-cyan-400 blur-md opacity-40"></div></div>
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">PromptLib <span className="text-cyan-500">Manager</span></span>
               </h1>
-              <div className="flex items-center gap-2 mt-1 px-2 py-0.5 rounded-full bg-[#1e293b] border border-slate-700 w-fit">
-                 {isPersisted ? <Database size={10} className="text-emerald-400" /> : <Database size={10} className="text-blue-400" />}
-                 <span className={`text-[10px] font-mono tracking-tight ${isPersisted ? 'text-emerald-400' : 'text-blue-400'}`}>{t.app.db.indexed}</span>
+              <div className="flex items-center gap-2 mt-1 px-2 py-0.5 rounded-full bg-[#1e293b] border border-slate-700 w-fit cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setShowCloudModal(true)}>
+                 {isCloud ? <Database size={10} className="text-purple-400" /> : <Database size={10} className="text-blue-400" />}
+                 <span className={`text-[10px] font-mono tracking-tight ${isCloud ? 'text-purple-400' : 'text-blue-400'}`}>
+                    {isCloud ? t.app.db.cloud : t.app.db.indexed}
+                 </span>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
+              <button onClick={() => setShowCloudModal(true)} className={`flex items-center justify-center w-8 h-8 rounded-lg border ${isCloud ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-slate-700 bg-[#0B1120] text-slate-400'} hover:text-white`} title="Cloud Settings">
+                  <Cloud size={14} />
+              </button>
+
               <div className="hidden md:flex items-center gap-1 bg-[#1e293b] p-1 rounded-lg border border-slate-700 mr-2">
                  <button onClick={handleExportDB} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-950/30 rounded-md" title={t.app.backupDesc}><Download size={16} /></button>
                  <button onClick={handleImportClick} className="p-2 text-slate-400 hover:text-purple-400 hover:bg-purple-950/30 rounded-md" title={t.app.restoreDesc}><UploadCloud size={16} /></button>
@@ -251,6 +268,8 @@ function App() {
         
         {view === 'form' && <div className="animate-slideUp"><PromptForm initialData={editingPrompt} onSave={handleSave} onCancel={handleCancel} dict={t.form} /></div>}
         {view === 'admin' && <div className="animate-slideUp"><AdminPanel prompts={prompts} setPrompts={setPrompts} onEdit={handleEdit} onDelete={handleDelete} dict={t.admin} /></div>}
+        
+        {showCloudModal && <CloudModal onClose={() => setShowCloudModal(false)} onConnect={handleCloudConnect} dict={t.cloud} currentPrompts={prompts} />}
       </main>
     </div>
   );
