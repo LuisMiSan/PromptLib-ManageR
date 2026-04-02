@@ -56,6 +56,34 @@ export const MOCK_PROMPTS: PromptEntry[] = [
     variables: ['Nombre del Proyecto', 'Duración'],
     usageExamples: '',
     tags: ['Planificación', 'Estrategia']
+  },
+  {
+    id: '5',
+    category: Category.Development,
+    name: 'Arquitecto de Apps Full-Stack',
+    objective: 'Diseñar la arquitectura completa de una aplicación web moderna',
+    inputType: 'Descripción de la idea',
+    persona: 'Arquitecto de Software Senior',
+    recommendedAi: AIModel.GeminiPro,
+    description: 'Genera un blueprint técnico detallado incluyendo stack, DB y API.',
+    content: 'Actúa como un Arquitecto de Software Senior. Diseña la arquitectura para una aplicación de [Tipo de App]. La aplicación debe incluir [Funcionalidades Clave]. \n\nProporciona:\n1. Stack tecnológico recomendado.\n2. Estructura de base de datos (Entidades y Relaciones).\n3. Definición de endpoints de API principales.\n4. Estrategia de despliegue y escalabilidad.',
+    variables: ['Tipo de App', 'Funcionalidades Clave'],
+    usageExamples: 'App de delivery, App de gestión de inventarios',
+    tags: ['Arquitectura', 'Backend', 'Diseño Técnico']
+  },
+  {
+    id: '6',
+    category: Category.Development,
+    name: 'Generador de MVP (React + Tailwind)',
+    objective: 'Generar el código base funcional para un componente o página de un MVP',
+    inputType: 'Requerimientos funcionales',
+    persona: 'Desarrollador Frontend Senior',
+    recommendedAi: AIModel.Gemini,
+    description: 'Código listo para copiar y usar con estilos modernos.',
+    content: 'Actúa como un experto en React y Tailwind CSS. Genera un componente de React llamado [Nombre del Componente] que sirva para [Propósito]. \n\nRequisitos:\n- Usa Tailwind CSS para un diseño [Estilo].\n- Debe ser totalmente responsivo.\n- Incluye manejo de estados con hooks.\n- Usa iconos de lucide-react.',
+    variables: ['Nombre del Componente', 'Propósito', 'Estilo'],
+    usageExamples: 'Dashboard de usuario, Formulario de registro, Landing page minimalista',
+    tags: ['React', 'Tailwind', 'Frontend', 'MVP']
   }
 ];
 
@@ -178,14 +206,14 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Conexión a Nube (Supabase)',
       desc: 'Conecta tu propia base de datos Postgres para sincronización permanente entre dispositivos.',
       urlPlaceholder: 'https://tu-proyecto.supabase.co',
-      keyPlaceholder: 'Tu anon public key',
+      keyPlaceholder: 'Pegar ANON PUBLIC KEY (No usar service_role)',
       connect: 'Conectar Cloud',
       disconnect: 'Desconectar',
       sync: 'Subir Locales a Nube',
       status: {
         connected: 'Conectado a Supabase',
         disconnected: 'Solo Local (IndexedDB)',
-        error: 'Error de Conexión'
+        error: 'Error de Conexión (Revisar Keys)'
       }
     }
   },
@@ -307,14 +335,14 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Cloud Connection (Supabase)',
       desc: 'Connect your own Postgres database for permanent sync across devices.',
       urlPlaceholder: 'https://your-project.supabase.co',
-      keyPlaceholder: 'Your anon public key',
+      keyPlaceholder: 'Paste ANON PUBLIC KEY (Do NOT use service_role)',
       connect: 'Connect Cloud',
       disconnect: 'Disconnect',
       sync: 'Upload Local to Cloud',
       status: {
         connected: 'Connected to Supabase',
         disconnected: 'Local Only (IndexedDB)',
-        error: 'Connection Error'
+        error: 'Connection Error (Check Keys)'
       }
     }
   }

@@ -5,7 +5,7 @@ import { PromptForm } from './components/PromptModal';
 import { AdminPanel } from './components/AdminPanel';
 import { CloudModal } from './components/CloudModal';
 import { PromptEntry, PromptFormData, Category } from './types';
-import { TRANSLATIONS } from './constants';
+import { TRANSLATIONS, MOCK_PROMPTS } from './constants';
 import { storageService } from './services/storageService';
 
 // Helper to get icon for category
@@ -45,7 +45,19 @@ function App() {
       setIsCloud(storageService.isCloudActive());
       try {
         const loadedPrompts = await storageService.loadPrompts();
-        setPrompts(loadedPrompts);
+        // Ensure new system mocks are added if they don't exist in the current DB
+        const existingIds = new Set(loadedPrompts.map(p => p.id));
+        const missingMocks = MOCK_PROMPTS.filter(m => !existingIds.has(m.id));
+        
+        if (missingMocks.length > 0) {
+          const merged = [...loadedPrompts, ...missingMocks];
+          setPrompts(merged);
+          // Trigger an immediate save for the new ones
+          await storageService.savePrompts(merged);
+        } else {
+          setPrompts(loadedPrompts);
+        }
+        
         setDbStatus('ready'); 
       } catch (e) {
         console.error("Critical error loading DB:", e);
