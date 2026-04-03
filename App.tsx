@@ -36,6 +36,9 @@ function App() {
   
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const t = TRANSLATIONS[lang];
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminPassInput, setAdminPassInput] = useState('');
+  const [showAdminGate, setShowAdminGate] = useState(false);
 
   useEffect(() => {
     const initApp = async () => {
@@ -155,7 +158,36 @@ function App() {
   const handleEdit = (prompt: PromptEntry) => { setEditingPrompt(prompt); setView('form'); };
   const handleCancel = () => { setView('list'); setEditingPrompt(undefined); };
   const toggleLanguage = () => { setLang(prev => prev === 'es' ? 'en' : 'es'); };
-  const handleAdminClick = () => { setView('admin'); setEditingPrompt(undefined); }
+  const handleAdminClick = () => { 
+    if (isAdminAuthenticated) {
+      setView('admin'); 
+      setEditingPrompt(undefined); 
+    } else {
+      setShowAdminGate(true);
+    }
+  };
+
+  const handleAdminLogin = async () => {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassInput })
+      });
+      const result = await response.json();
+      if (result.success) {
+        setIsAdminAuthenticated(true);
+        setShowAdminGate(false);
+        setView('admin');
+        setEditingPrompt(undefined);
+      } else {
+        alert(lang === 'es' ? 'Contraseña incorrecta' : 'Incorrect password');
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert(lang === 'es' ? 'Error al conectar con el servidor' : 'Server connection error');
+    }
+  };
   const handleTotalClick = () => { setSearchQuery(''); setSelectedCategory('All'); window.scrollTo({ top: 300, behavior: 'smooth' }); };
   const handleCategoryClick = () => { categorySelectRef.current?.focus(); categorySelectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   const handleModelClick = () => { searchInputRef.current?.focus(); searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
@@ -194,6 +226,46 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#0B1120] font-sans text-slate-300 selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Admin Password Gate Modal */}
+      {showAdminGate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#1e293b] border border-slate-700 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="text-purple-400" size={32} />
+              <h2 className="text-xl font-bold text-white">Admin Access</h2>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">
+              {lang === 'es' 
+                ? 'Ingresa la contraseña de administrador para acceder a la consola de gestión.' 
+                : 'Enter admin password to access the management console.'}
+            </p>
+            <input 
+              type="password"
+              value={adminPassInput}
+              onChange={(e) => setAdminPassInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+              placeholder="••••••••"
+              className="w-full bg-[#0f172a] border border-slate-700 rounded-xl p-4 text-white mb-6 focus:ring-2 focus:ring-purple-500 outline-none"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowAdminGate(false)}
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors"
+              >
+                {t.form.abort}
+              </button>
+              <button 
+                onClick={handleAdminLogin}
+                className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg shadow-purple-900/20 transition-all"
+              >
+                {lang === 'es' ? 'Entrar' : 'Login'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#0f172a] border-b border-cyan-900/30 shadow-[0_4px_20px_-5px_rgba(6,182,212,0.1)] pb-24 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>

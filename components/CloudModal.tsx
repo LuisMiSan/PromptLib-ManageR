@@ -12,6 +12,7 @@ interface CloudModalProps {
 
 const REQUIRED_SQL = `create table public.prompts (
   id text primary key,
+  user_id uuid references auth.users default auth.uid(),
   name text,
   category text,
   objective text,
@@ -26,12 +27,25 @@ const REQUIRED_SQL = `create table public.prompts (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- Habilitar acceso (Simple)
+-- Habilitar acceso SEGURO (Solo el dueño puede ver/editar sus datos)
 alter table public.prompts enable row level security;
-create policy "Public Access" on public.prompts for all using (true);
-create policy "Public Insert" on public.prompts for insert with check (true);
-create policy "Public Update" on public.prompts for update using (true);
-create policy "Public Delete" on public.prompts for delete using (true);`;
+
+create policy "Users can view own prompts" 
+on public.prompts for select 
+using (auth.uid() = user_id);
+
+create policy "Users can insert own prompts" 
+on public.prompts for insert 
+with check (auth.uid() = user_id);
+
+create policy "Users can update own prompts" 
+on public.prompts for update 
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create policy "Users can delete own prompts" 
+on public.prompts for delete 
+using (auth.uid() = user_id);`;
 
 export const CloudModal: React.FC<CloudModalProps> = ({ onClose, onConnect, dict, currentPrompts }) => {
   const [url, setUrl] = useState('');

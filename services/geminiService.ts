@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { PromptFormData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 // --- HELPERS PARA AUDIO ---
 function decode(base64: string) {
   const binaryString = atob(base64);
@@ -32,7 +30,6 @@ async function decodeAudioData(
   }
   return buffer;
 }
-// --------------------------
 
 // Helper: Convert File to Base64 string (for Images/PDF)
 const fileToBase64 = (file: File): Promise<string> => {
@@ -78,6 +75,19 @@ const cleanJSON = (text: string) => {
   return text.replace(/```json\s*|\s*```/g, "").trim();
 };
 
+const callAIProxy = async (params: any) => {
+  const response = await fetch('/api/ai/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "AI Proxy Error");
+  }
+  return response.json();
+};
+
 export const optimizePromptContent = async (currentData: PromptFormData): Promise<string> => {
   try {
     const promptInstructions = `
@@ -90,7 +100,7 @@ export const optimizePromptContent = async (currentData: PromptFormData): Promis
       Solo devuelve el texto optimizado.
     `;
 
-    const response = await ai.models.generateContent({
+    const result = await callAIProxy({
       model: 'gemini-3-pro-preview',
       contents: promptInstructions,
       config: {
@@ -98,7 +108,7 @@ export const optimizePromptContent = async (currentData: PromptFormData): Promis
       }
     });
 
-    return response.text || currentData.content;
+    return result.text || currentData.content;
   } catch (error) {
     console.error("Error optimizing:", error);
     throw error;
@@ -111,12 +121,12 @@ export const generateTags = async (objective: string, category: string): Promise
       Genera 3 etiquetas cortas para: ${category}, ${objective}.
       Separadas por comas.
     `;
-    const response = await ai.models.generateContent({
+    const result = await callAIProxy({
       model: 'gemini-flash-lite-latest', 
       contents: promptInstructions,
     });
-    const text = response.text || "";
-    return text.split(',').map(tag => tag.trim()).filter(t => t.length > 0);
+    const text = result.text || "";
+    return text.split(',').map((tag: string) => tag.trim()).filter((t: string) => t.length > 0);
   } catch (error) {
     return ["AI", "Productivity"];
   }
@@ -167,7 +177,7 @@ export const extractMultiplePromptsFromFile = async (file: File): Promise<Partia
       Analiza el documento completo y extrae TODOS los items numerados como entradas independientes.
     `;
 
-    const response = await ai.models.generateContent({
+    const result = await callAIProxy({
       model: modelToUse,
       contents: [
         contentPart,
@@ -193,8 +203,8 @@ export const extractMultiplePromptsFromFile = async (file: File): Promise<Partia
       }
     });
 
-    if (response.text) {
-      const parsed = JSON.parse(cleanJSON(response.text));
+    if (result.text) {
+      const parsed = JSON.parse(cleanJSON(result.text));
       return Array.isArray(parsed) ? parsed : [parsed];
     }
     throw new Error("No response");
@@ -214,7 +224,7 @@ export const extractPromptFromFile = async (file: File): Promise<Partial<PromptF
     const contentPart = await getFileContentPart(file);
     const promptInstruction = `Extrae 1 prompt de este archivo en JSON: name, objective, persona, content, tags.`;
     
-    const response = await ai.models.generateContent({
+    const result = await callAIProxy({
       model: 'gemini-2.5-flash',
       contents: [contentPart, { text: promptInstruction }],
       config: {
@@ -231,7 +241,7 @@ export const extractPromptFromFile = async (file: File): Promise<Partial<PromptF
         }
       }
     });
-    if (response.text) return JSON.parse(cleanJSON(response.text));
+    if (result.text) return JSON.parse(cleanJSON(result.text));
     throw new Error("No data");
   } catch (e) { throw e; }
 };
@@ -239,7 +249,7 @@ export const extractPromptFromFile = async (file: File): Promise<Partial<PromptF
 export const generateSpeechFromText = async (text: string): Promise<void> => {
   if (!text) return;
   try {
-    const response = await ai.models.generateContent({
+    const result = await callAIProxy({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
       config: {
@@ -247,7 +257,7 @@ export const generateSpeechFromText = async (text: string): Promise<void> => {
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
       },
     });
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    const base64Audio = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) return;
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
     const audioBuffer = await decodeAudioData(decode(base64Audio), ctx, 24000, 1);
