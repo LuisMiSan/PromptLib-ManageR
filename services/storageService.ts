@@ -1,4 +1,4 @@
-import { PromptEntry, SupabaseConfig } from '../types';
+import { PromptEntry, SupabaseConfig, UserProfile } from '../types';
 import { MOCK_PROMPTS } from '../constants';
 
 const DB_NAME = 'PromptLibManager';
@@ -35,7 +35,7 @@ export const storageService = {
     });
   },
 
-  // --- SUPABASE CONFIG ---
+  // --- SUPABASE CONFIG & AUTH ---
   initSupabase: (config: SupabaseConfig) => {
     if (typeof supabase !== 'undefined') {
       try {
@@ -57,6 +57,52 @@ export const storageService = {
 
   isCloudActive: () => {
     return !!supabaseClient;
+  },
+
+  signInWithGoogle: async () => {
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) throw error;
+  },
+
+  signOut: async () => {
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+  },
+
+  getCurrentUser: async (): Promise<UserProfile | null> => {
+    if (!supabaseClient) return null;
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.full_name,
+      avatar_url: user.user_metadata?.avatar_url
+    };
+  },
+
+  onAuthStateChange: (callback: (user: UserProfile | null) => void) => {
+    if (!supabaseClient) return () => {};
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event: any, session: any) => {
+      if (session?.user) {
+        callback({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name,
+          avatar_url: session.user.user_metadata?.avatar_url
+        });
+      } else {
+        callback(null);
+      }
+    });
+    return () => subscription.unsubscribe();
   },
 
   // --- MAIN ACTIONS ---
@@ -125,8 +171,14 @@ export const storageService = {
     // IF CLOUD, SYNC
     if (supabaseClient) {
       try {
+        const user = await storageService.getCurrentUser();
+        const promptsToSave = prompts.map(p => ({
+          ...p,
+          user_id: user?.id || p.user_id
+        }));
+
         // Upsert all prompts. Note: Supabase upsert requires IDs to match.
-        const { error } = await supabaseClient.from('prompts').upsert(prompts);
+        const { error } = await supabaseClient.from('prompts').upsert(promptsToSave);
         if (error) console.error("Supabase save error:", error);
       } catch (e) {
         console.error("Supabase crash:", e);
@@ -137,7 +189,12 @@ export const storageService = {
   // One-time sync from Local to Cloud
   syncLocalToCloud: async (localPrompts: PromptEntry[]) => {
     if (!supabaseClient) throw new Error("No cloud connection");
-    const { error } = await supabaseClient.from('prompts').upsert(localPrompts);
+    const user = await storageService.getCurrentUser();
+    const promptsToSave = localPrompts.map(p => ({
+      ...p,
+      user_id: user?.id || p.user_id
+    }));
+    const { error } = await supabaseClient.from('prompts').upsert(promptsToSave);
     if (error) throw error;
   },
 

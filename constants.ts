@@ -143,7 +143,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       sections: {
         core: 'Parámetros Base',
         vars: 'Variables Dinámicas y Etiquetas',
-        engineering: 'Ingeniería de Prompts'
+        engineering: 'Prompt Ingeniería'
       },
       labels: {
         designation: 'Designación del Prompt',
@@ -215,6 +215,11 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         disconnected: 'Solo Local (IndexedDB)',
         error: 'Error de Conexión (Revisar Keys)'
       }
+    },
+    auth: {
+      login: 'Iniciar Sesión con Google',
+      logout: 'Cerrar Sesión',
+      welcome: 'Bienvenido',
     }
   },
   en: {
@@ -344,6 +349,11 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         disconnected: 'Local Only (IndexedDB)',
         error: 'Connection Error (Check Keys)'
       }
+    },
+    auth: {
+      login: 'Login with Google',
+      logout: 'Logout',
+      welcome: 'Welcome',
     }
   }
 };

@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, Database, Loader2, AlertTriangle, Cloud } from 'lucide-react';
+import { Plus, Search, LayoutGrid, Filter, BookOpen, ChevronRight, Home, Zap, Languages, X, Megaphone, Target, Lightbulb, BarChart2, Code, Shield, Download, UploadCloud, Database, Loader2, AlertTriangle, Cloud, LogIn, LogOut } from 'lucide-react';
 import { PromptTable } from './components/PromptTable';
 import { PromptForm } from './components/PromptModal';
 import { AdminPanel } from './components/AdminPanel';
 import { CloudModal } from './components/CloudModal';
-import { PromptEntry, PromptFormData, Category } from './types';
+import { PromptEntry, PromptFormData, Category, UserProfile } from './types';
 import { TRANSLATIONS, MOCK_PROMPTS } from './constants';
 import { storageService } from './services/storageService';
 
@@ -39,6 +39,7 @@ function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [adminPassInput, setAdminPassInput] = useState('');
   const [showAdminGate, setShowAdminGate] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const initApp = async () => {
@@ -68,6 +69,13 @@ function App() {
       }
     };
     initApp();
+
+    // Auth listener
+    const unsubscribe = storageService.onAuthStateChange((user) => {
+      setCurrentUser(user);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -188,6 +196,24 @@ function App() {
       alert(lang === 'es' ? 'Error al conectar con el servidor' : 'Server connection error');
     }
   };
+
+  const handleLogin = async () => {
+    try {
+      await storageService.signInWithGoogle();
+    } catch (error) {
+      console.error("Login error:", error);
+      alert(lang === 'es' ? 'Error al iniciar sesión' : 'Login error');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await storageService.signOut();
+      setCurrentUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   const handleTotalClick = () => { setSearchQuery(''); setSelectedCategory('All'); window.scrollTo({ top: 300, behavior: 'smooth' }); };
   const handleCategoryClick = () => { categorySelectRef.current?.focus(); categorySelectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   const handleModelClick = () => { searchInputRef.current?.focus(); searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
@@ -292,6 +318,21 @@ function App() {
             </div>
             
             <div className="flex items-center gap-3">
+              {currentUser ? (
+                <div className="flex items-center gap-2 bg-[#1e293b] p-1 pr-3 rounded-full border border-slate-700">
+                  <img src={currentUser.avatar_url} alt={currentUser.name} className="w-7 h-7 rounded-full border border-slate-600" referrerPolicy="no-referrer" />
+                  <span className="text-xs font-medium text-slate-200 hidden sm:inline">{currentUser.name}</span>
+                  <button onClick={handleLogout} className="text-slate-500 hover:text-red-400 transition-colors ml-1" title={t.auth.logout}>
+                    <LogOut size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleLogin} className="flex items-center gap-2 px-3 py-1.5 bg-[#1e293b] hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-700 transition-all text-xs font-medium" title={t.auth.login}>
+                  <LogIn size={14} />
+                  <span className="hidden sm:inline">{t.auth.login}</span>
+                </button>
+              )}
+
               <button onClick={() => setShowCloudModal(true)} className={`flex items-center justify-center w-8 h-8 rounded-lg border ${isCloud ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-slate-700 bg-[#0B1120] text-slate-400'} hover:text-white`} title="Cloud Settings">
                   <Cloud size={14} />
               </button>

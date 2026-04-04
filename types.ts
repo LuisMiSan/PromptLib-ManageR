@@ -19,6 +19,7 @@ export enum Category {
 
 export interface PromptEntry {
   id: string;
+  user_id?: string; // Supabase user ID
   category: Category | string;
   name: string;
   objective: string;
@@ -30,6 +31,13 @@ export interface PromptEntry {
   variables: string[]; // e.g., ["Tone", "Audience"]
   usageExamples: string;
   tags: string[];
+}
+
+export interface UserProfile {
+  id: string;
+  email?: string;
+  name?: string;
+  avatar_url?: string;
 }
 
 export type PromptFormData = Omit<PromptEntry, 'id'>;
@@ -79,6 +87,7 @@ export interface TranslationDictionary {
     copied: string;
     close: string;
     openAction: string; 
+    copyAction?: string;
   };
   form: {
     editTitle: string;
@@ -167,5 +176,10 @@ export interface TranslationDictionary {
       disconnected: string;
       error: string;
     }
-  }
+  };
+  auth: {
+    login: string;
+    logout: string;
+    welcome: string;
+  };
 }
