@@ -12,6 +12,7 @@ interface PromptFormProps {
 }
 
 const INITIAL_DATA: PromptFormData = {
+  type: 'prompt',
   category: Category.Marketing,
   name: '',
   objective: '',
@@ -20,6 +21,8 @@ const INITIAL_DATA: PromptFormData = {
   recommendedAi: AIModel.ChatGPT,
   description: '',
   content: '',
+  systemInstruction: '',
+  tools: '',
   variables: [],
   usageExamples: '',
   tags: []
@@ -57,12 +60,20 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onCancel, onSave, initia
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    if (name === 'content') {
+    if (name === 'content' || name === 'systemInstruction') {
       const detectedVariables = extractVariablesFromText(value);
-      setFormData(prev => ({ ...prev, [name]: value, variables: detectedVariables }));
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value, 
+        variables: [...new Set([...prev.variables, ...detectedVariables])] 
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const setType = (type: 'prompt' | 'skill') => {
+    setFormData(prev => ({ ...prev, type }));
   };
 
   const handleOptimize = async () => {
@@ -268,6 +279,23 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onCancel, onSave, initia
 
       {/* Body */}
       <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <div className="flex gap-4 p-1 bg-[#0f172a] rounded-xl border border-slate-700 w-fit">
+          <button
+            type="button"
+            onClick={() => setType('prompt')}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${formData.type === 'prompt' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Prompt
+          </button>
+          <button
+            type="button"
+            onClick={() => setType('skill')}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${formData.type === 'skill' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Agentic Skill
+          </button>
+        </div>
+
         {!initialData && (
           <div 
             className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all ${dragActive ? 'bg-cyan-950/30 border-cyan-400 scale-[1.01]' : 'bg-[#0f172a] border-slate-700 hover:border-cyan-500/50'}`}
@@ -322,9 +350,43 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onCancel, onSave, initia
           <div className="lg:col-span-8 space-y-6">
             <input name="objective" required value={formData.objective} onChange={handleChange} placeholder={dict.placeholders.objective} className={`${inputClass} p-4 text-lg border-slate-600`} />
             
+            {formData.type === 'skill' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="relative bg-[#0f172a] rounded-2xl p-1 border border-slate-700">
+                  <div className="px-3 pt-2 mb-2">
+                    <label className="text-purple-400 font-bold uppercase text-xs tracking-widest">{dict.labels.systemInstruction}</label>
+                  </div>
+                  <textarea 
+                    name="systemInstruction" 
+                    rows={6} 
+                    value={formData.systemInstruction} 
+                    onChange={handleChange} 
+                    placeholder="Actúa como un agente que..." 
+                    className="w-full bg-[#0B1120] border-y border-slate-800 p-4 font-mono text-sm leading-relaxed focus:ring-0 text-purple-50 resize-y" 
+                  />
+                </div>
+
+                <div className="relative bg-[#0f172a] rounded-2xl p-1 border border-slate-700">
+                  <div className="px-3 pt-2 mb-2">
+                    <label className="text-emerald-400 font-bold uppercase text-xs tracking-widest">{dict.labels.tools}</label>
+                  </div>
+                  <textarea 
+                    name="tools" 
+                    rows={8} 
+                    value={formData.tools} 
+                    onChange={handleChange} 
+                    placeholder='[ { "name": "get_weather", ... } ]' 
+                    className="w-full bg-[#0B1120] border-y border-slate-800 p-4 font-mono text-xs leading-relaxed focus:ring-0 text-emerald-50 resize-y" 
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="relative bg-[#0f172a] rounded-2xl p-1 border border-slate-700">
                <div className="flex justify-between items-center mb-2 px-3 pt-2">
-                 <label className="text-slate-200 font-bold">{dict.labels.content}</label>
+                 <label className={`font-bold ${formData.type === 'skill' ? 'text-slate-400 text-xs uppercase tracking-widest' : 'text-slate-200'}`}>
+                   {formData.type === 'skill' ? 'Prompt Base / Context' : dict.labels.content}
+                 </label>
                  <div className="flex gap-2">
                     <button type="button" onClick={handleDownloadPDF} disabled={!formData.content} className="p-2 bg-slate-800 rounded hover:bg-slate-700"><FileDown size={14} className="text-red-400"/></button>
                     <button type="button" onClick={handleSpeak} disabled={isPlayingAudio} className="p-2 bg-slate-800 rounded hover:bg-slate-700"><Volume2 size={14} className={isPlayingAudio?"text-green-400 animate-pulse":"text-slate-400"}/></button>

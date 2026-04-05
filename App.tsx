@@ -306,8 +306,8 @@ function App() {
                 {view === 'admin' && (<><ChevronRight size={12} className="text-slate-600"/><span className="text-purple-400 animate-pulse">{t.app.admin}</span></>)}
               </div>
               <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                <div className="relative"><BookOpen className="text-cyan-400" size={28} /><div className="absolute inset-0 bg-cyan-400 blur-md opacity-40"></div></div>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">PromptLib <span className="text-cyan-500">Manager</span></span>
+                <div className="relative"><Zap className="text-purple-400" size={28} /><div className="absolute inset-0 bg-purple-400 blur-md opacity-40"></div></div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">Agentic <span className="text-purple-500">Skill Hub</span></span>
               </h1>
               <div className="flex items-center gap-2 mt-1 px-2 py-0.5 rounded-full bg-[#1e293b] border border-slate-700 w-fit cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => setShowCloudModal(true)}>
                  {isCloud ? <Database size={10} className="text-purple-400" /> : <Database size={10} className="text-blue-400" />}

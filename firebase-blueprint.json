@@ -1,0 +1,34 @@
+{
+  "entities": {
+    "PromptEntry": {
+      "title": "Prompt or Skill Entry",
+      "description": "Represents a single prompt or agentic skill in the library.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "user_id": { "type": "string", "description": "Owner's user ID" },
+        "type": { "type": "string", "enum": ["prompt", "skill"], "description": "Entry type" },
+        "category": { "type": "string", "description": "Category of the entry" },
+        "name": { "type": "string", "description": "Name of the prompt or skill" },
+        "objective": { "type": "string", "description": "Primary goal" },
+        "inputType": { "type": "string", "description": "Format of input" },
+        "persona": { "type": "string", "description": "AI persona or role" },
+        "recommendedAi": { "type": "string", "description": "Recommended AI model" },
+        "description": { "type": "string", "description": "Short description or notes" },
+        "content": { "type": "string", "description": "Prompt text or base context" },
+        "systemInstruction": { "type": "string", "description": "System instructions for agents" },
+        "tools": { "type": "string", "description": "JSON tool declarations" },
+        "variables": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "usageExamples": { "type": "string" }
+      },
+      "required": ["id", "type", "category", "name", "content"]
+    }
+  },
+  "firestore": {
+    "/prompts/{promptId}": {
+      "schema": "PromptEntry",
+      "description": "Collection of prompts and skills owned by users."
+    }
+  }
+}

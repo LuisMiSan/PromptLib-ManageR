@@ -14,12 +14,18 @@ export enum Category {
   Creativity = 'Creatividad y Generación de Ideas',
   Analysis = 'Análisis de Data',
   Development = 'Desarrollo y Código',
+  DataRetrieval = 'Recuperación de Datos',
+  Automation = 'Automatización y Flujos',
+  WebInteraction = 'Interacción Web',
   Other = 'Otros'
 }
+
+export type EntryType = 'prompt' | 'skill';
 
 export interface PromptEntry {
   id: string;
   user_id?: string; // Supabase user ID
+  type: EntryType;
   category: Category | string;
   name: string;
   objective: string;
@@ -27,7 +33,9 @@ export interface PromptEntry {
   persona: string;
   recommendedAi: AIModel;
   description: string;
-  content: string; // The actual prompt text
+  content: string; // The actual prompt text or system instruction
+  systemInstruction?: string; // Specific for Skills
+  tools?: string; // JSON string for function declarations
   variables: string[]; // e.g., ["Tone", "Audience"]
   usageExamples: string;
   tags: string[];
@@ -117,6 +125,9 @@ export interface TranslationDictionary {
       inputFormat: string;
       content: string;
       notes: string;
+      type: string;
+      systemInstruction: string;
+      tools: string;
     };
     buttons: {
       audio: string;

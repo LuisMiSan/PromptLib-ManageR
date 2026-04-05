@@ -3,6 +3,7 @@ import { PromptEntry, Category, AIModel, TranslationDictionary } from './types';
 export const MOCK_PROMPTS: PromptEntry[] = [
   {
     id: '1',
+    type: 'prompt',
     category: Category.Marketing,
     name: 'Post de LinkedIn',
     objective: 'Escribir un post persuasivo en LinkedIn sobre un nuevo producto',
@@ -17,6 +18,7 @@ export const MOCK_PROMPTS: PromptEntry[] = [
   },
   {
     id: '2',
+    type: 'prompt',
     category: Category.Productivity,
     name: 'Asuntos de email',
     objective: 'Crear líneas de asunto efectivas para correos electrónicos de ventas en frío',
@@ -31,6 +33,7 @@ export const MOCK_PROMPTS: PromptEntry[] = [
   },
   {
     id: '3',
+    type: 'prompt',
     category: Category.Creativity,
     name: 'Resumen de reuniones',
     objective: 'Resumir reuniones de manera estructurada y con acciones concretas',
@@ -45,6 +48,7 @@ export const MOCK_PROMPTS: PromptEntry[] = [
   },
   {
     id: '4',
+    type: 'prompt',
     category: Category.Analysis,
     name: 'Planificación de proyectos',
     objective: 'Diseñar un plan de proyecto estructurado desde cero',
@@ -59,6 +63,7 @@ export const MOCK_PROMPTS: PromptEntry[] = [
   },
   {
     id: '5',
+    type: 'prompt',
     category: Category.Development,
     name: 'Arquitecto de Apps Full-Stack',
     objective: 'Diseñar la arquitectura completa de una aplicación web moderna',
@@ -73,17 +78,200 @@ export const MOCK_PROMPTS: PromptEntry[] = [
   },
   {
     id: '6',
-    category: Category.Development,
-    name: 'Generador de MVP (React + Tailwind)',
-    objective: 'Generar el código base funcional para un componente o página de un MVP',
-    inputType: 'Requerimientos funcionales',
-    persona: 'Desarrollador Frontend Senior',
+    type: 'skill',
+    category: Category.WebInteraction,
+    name: 'Buscador de Vuelos Agéntico',
+    objective: 'Buscar y comparar vuelos en tiempo real usando herramientas externas',
+    inputType: 'Origen, Destino, Fechas',
+    persona: 'Agente de Viajes Inteligente',
     recommendedAi: AIModel.Gemini,
-    description: 'Código listo para copiar y usar con estilos modernos.',
-    content: 'Actúa como un experto en React y Tailwind CSS. Genera un componente de React llamado [Nombre del Componente] que sirva para [Propósito]. \n\nRequisitos:\n- Usa Tailwind CSS para un diseño [Estilo].\n- Debe ser totalmente responsivo.\n- Incluye manejo de estados con hooks.\n- Usa iconos de lucide-react.',
-    variables: ['Nombre del Componente', 'Propósito', 'Estilo'],
-    usageExamples: 'Dashboard de usuario, Formulario de registro, Landing page minimalista',
-    tags: ['React', 'Tailwind', 'Frontend', 'MVP']
+    description: 'Skill que permite al agente buscar vuelos reales mediante una API.',
+    content: 'Eres un Agente de Viajes experto. Tu objetivo es encontrar las mejores opciones de vuelo para el usuario.',
+    systemInstruction: 'Actúa como un asistente de viajes. Usa la herramienta search_flights para obtener datos reales. Compara precios y escalas antes de dar una recomendación final.',
+    tools: JSON.stringify([
+      {
+        name: "search_flights",
+        description: "Busca vuelos disponibles entre dos ciudades en fechas específicas",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            origin: { type: "STRING", description: "Código IATA de la ciudad de origen" },
+            destination: { type: "STRING", description: "Código IATA de la ciudad de destino" },
+            departure_date: { type: "STRING", description: "Fecha de salida en formato YYYY-MM-DD" }
+          },
+          required: ["origin", "destination", "departure_date"]
+        }
+      }
+    ], null, 2),
+    variables: ['Origen', 'Destino', 'Fecha'],
+    usageExamples: 'Vuelos de Madrid a Tokyo el 20 de Mayo',
+    tags: ['Agente', 'Tools', 'Viajes']
+  },
+  {
+    id: '7',
+    type: 'skill',
+    category: Category.Automation,
+    name: 'Analista de Repositorios GitHub',
+    objective: 'Analizar la estructura y calidad de un repositorio de código',
+    inputType: 'URL del Repositorio',
+    persona: 'Ingeniero de QA / DevOps',
+    recommendedAi: AIModel.GeminiPro,
+    description: 'Skill para interactuar con la API de GitHub y auditar código.',
+    content: 'Analiza el repositorio proporcionado y genera un reporte de salud técnica.',
+    systemInstruction: 'Eres un auditor de código. Usa fetch_repo_structure para entender el proyecto y analyze_file para revisar archivos críticos.',
+    tools: JSON.stringify([
+      {
+        name: "fetch_repo_structure",
+        description: "Obtiene el árbol de archivos de un repositorio de GitHub",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            repo_url: { type: "STRING", description: "URL completa del repositorio" }
+          },
+          required: ["repo_url"]
+        }
+      },
+      {
+        name: "analyze_file",
+        description: "Lee y analiza el contenido de un archivo específico",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            file_path: { type: "STRING", description: "Ruta del archivo dentro del repo" }
+          },
+          required: ["file_path"]
+        }
+      }
+    ], null, 2),
+    variables: ['Repo URL'],
+    usageExamples: 'Analizar https://github.com/facebook/react',
+    tags: ['Agente', 'GitHub', 'Código']
+  },
+  {
+    id: '8',
+    type: 'skill',
+    category: Category.Analysis,
+    name: 'Analista de Datos SQL',
+    objective: 'Consultar bases de datos SQL y generar reportes visuales',
+    inputType: 'Pregunta en lenguaje natural',
+    persona: 'Data Scientist Senior',
+    recommendedAi: AIModel.GeminiPro,
+    description: 'Skill para traducir lenguaje natural a SQL y ejecutar consultas seguras.',
+    content: 'Ayuda al usuario a entender sus datos ejecutando consultas SQL precisas.',
+    systemInstruction: 'Eres un experto en SQL. Usa execute_query para obtener datos y generate_chart para visualizarlos. Siempre valida la seguridad de la consulta antes de ejecutarla.',
+    tools: JSON.stringify([
+      {
+        name: "execute_query",
+        description: "Ejecuta una consulta SQL de solo lectura en la base de datos",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            sql: { type: "STRING", description: "La consulta SQL a ejecutar" }
+          },
+          required: ["sql"]
+        }
+      },
+      {
+        name: "generate_chart",
+        description: "Crea un gráfico a partir de un conjunto de datos",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            data: { type: "ARRAY", items: { type: "OBJECT" }, description: "Array de objetos con los datos" },
+            type: { type: "STRING", enum: ["bar", "line", "pie"], description: "Tipo de gráfico" },
+            title: { type: "STRING", description: "Título del gráfico" }
+          },
+          required: ["data", "type"]
+        }
+      }
+    ], null, 2),
+    variables: ['Pregunta'],
+    usageExamples: '¿Cuáles fueron las ventas totales por mes el año pasado?',
+    tags: ['Data', 'SQL', 'Visualización']
+  },
+  {
+    id: '9',
+    type: 'skill',
+    category: Category.WebInteraction,
+    name: 'Investigador de Mercado Agéntico',
+    objective: 'Realizar investigaciones profundas en la web sobre temas específicos',
+    inputType: 'Tema de investigación',
+    persona: 'Analista de Mercado Estratégico',
+    recommendedAi: AIModel.Gemini,
+    description: 'Skill que combina búsqueda web y extracción de contenido para reportes.',
+    content: 'Investiga el tema solicitado y proporciona un resumen ejecutivo con fuentes.',
+    systemInstruction: 'Usa google_search para encontrar fuentes relevantes y fetch_url_content para leer los detalles. Sintetiza la información evitando duplicados.',
+    tools: JSON.stringify([
+      {
+        name: "google_search",
+        description: "Busca en la web usando Google Search",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            query: { type: "STRING", description: "Términos de búsqueda" }
+          },
+          required: ["query"]
+        }
+      },
+      {
+        name: "fetch_url_content",
+        description: "Extrae el texto principal de una página web",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            url: { type: "STRING", description: "URL de la página a leer" }
+          },
+          required: ["url"]
+        }
+      }
+    ], null, 2),
+    variables: ['Tema'],
+    usageExamples: 'Tendencias actuales en inteligencia artificial generativa 2026',
+    tags: ['Investigación', 'Web', 'Reporte']
+  },
+  {
+    id: '10',
+    type: 'skill',
+    category: Category.Automation,
+    name: 'Gestor de Calendario Inteligente',
+    objective: 'Gestionar eventos y disponibilidad en el calendario',
+    inputType: 'Instrucción de agenda',
+    persona: 'Asistente Ejecutivo Virtual',
+    recommendedAi: AIModel.Gemini,
+    description: 'Skill para automatizar la creación y consulta de eventos.',
+    content: 'Gestiona mi agenda de manera eficiente, evitando conflictos de horario.',
+    systemInstruction: 'Usa list_events para revisar mi disponibilidad y create_event para agendar nuevas citas. Confirma siempre los detalles antes de finalizar.',
+    tools: JSON.stringify([
+      {
+        name: "list_events",
+        description: "Lista los eventos del calendario para un rango de fechas",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            start_date: { type: "STRING", description: "Fecha inicio ISO" },
+            end_date: { type: "STRING", description: "Fecha fin ISO" }
+          },
+          required: ["start_date", "end_date"]
+        }
+      },
+      {
+        name: "create_event",
+        description: "Crea un nuevo evento en el calendario",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            summary: { type: "STRING", description: "Título del evento" },
+            start_time: { type: "STRING", description: "Inicio ISO" },
+            end_time: { type: "STRING", description: "Fin ISO" },
+            location: { type: "STRING", description: "Ubicación opcional" }
+          },
+          required: ["summary", "start_time", "end_time"]
+        }
+      }
+    ], null, 2),
+    variables: ['Instrucción'],
+    usageExamples: 'Agenda una reunión con el equipo de diseño mañana a las 10am',
+    tags: ['Productividad', 'Calendario', 'Automatización']
   }
 ];
 
@@ -91,10 +279,10 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
   es: {
     app: {
       home: 'Inicio',
-      newPrompt: 'Nuevo Prompt',
-      editPrompt: 'Editar Prompt',
+      newPrompt: 'Nueva Secuencia',
+      editPrompt: 'Editar Protocolo',
       admin: 'Admin Console',
-      title: 'Gestor',
+      title: 'Skill Hub',
       searchPlaceholder: 'Buscar en la base de datos...',
       allCategories: 'Todas las Categorías',
       db: {
@@ -107,9 +295,9 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       backupDesc: 'Descargar Base de Datos (JSON)',
       restoreDesc: 'Restaurar Base de Datos',
       stats: {
-        total: 'Total Prompts',
+        total: 'Unidades Totales',
         categories: 'Categorías',
-        models: 'Modelos IA'
+        models: 'Motores IA'
       }
     },
     table: {
@@ -143,10 +331,10 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       sections: {
         core: 'Parámetros Base',
         vars: 'Variables Dinámicas y Etiquetas',
-        engineering: 'Prompt Ingeniería'
+        engineering: 'Ingeniería Agéntica'
       },
       labels: {
-        designation: 'Designación del Prompt',
+        designation: 'Designación',
         category: 'Categoría',
         engine: 'Motor Recomendado',
         persona: 'Persona / Rol',
@@ -154,8 +342,11 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         tags: 'Etiquetas del Sistema',
         objective: 'Objetivo Principal',
         inputFormat: 'Formato de Entrada',
-        content: 'Contenido del Prompt',
-        notes: 'Notas Adicionales'
+        content: 'Contenido / Prompt',
+        notes: 'Notas Adicionales',
+        type: 'Tipo de Entrada',
+        systemInstruction: 'Instrucción del Sistema (Agente)',
+        tools: 'Declaración de Herramientas (JSON)'
       },
       buttons: {
         audio: 'REPRODUCIR TTS',
@@ -166,14 +357,14 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         pdf: 'DESCARGAR PDF'
       },
       placeholders: {
-        name: 'Ej: Generador de Contenido Viral',
-        persona: 'Ej: Especialista SEO Senior',
+        name: 'Ej: Buscador de Vuelos Agéntico',
+        persona: 'Ej: Agente de Viajes Inteligente',
         variable: 'Añadir variable...',
         tag: 'Añadir etiqueta...',
-        objective: '¿Cuál es el objetivo específico de esta secuencia?',
-        input: 'Ej: Texto plano, URL, CSV, Imagen...',
-        content: '// Ingresa la secuencia aquí...\n// Usa [corchetes] para variables.\n\nActúa como un [Rol]. Escribe un análisis técnico de...',
-        notes: 'Instrucciones de uso, contexto, restricciones...'
+        objective: '¿Qué problema resuelve esta capacidad?',
+        input: 'Ej: JSON, URL, Parámetros...',
+        content: '// Prompt base o instrucciones generales...',
+        notes: 'Instrucciones de uso, límites, APIs necesarias...'
       },
       status: {
         ready: 'LISTO PARA PROCESAR',
@@ -184,9 +375,9 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Gestor de Base de Datos',
       subtitle: 'Acceso directo, backups y optimización',
       columns: {
-        name: 'Nombre del Prompt',
+        name: 'Nombre',
         category: 'Categoría',
-        preview: 'Vista Previa (Inicio)',
+        preview: 'Vista Previa',
         actions: 'Acciones de IA / Gestión'
       },
       buttons: {
@@ -199,7 +390,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         processing: 'PROCESANDO LOTE...',
         reset: 'Resetear Fábrica'
       },
-      empty: 'No prompts en la base de datos.',
+      empty: 'No hay registros en la base de datos.',
       dataManagement: 'Gestión de Datos'
     },
     cloud: {
@@ -228,7 +419,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       newPrompt: 'New_Sequence',
       editPrompt: 'Edit_Protocol',
       admin: 'Admin Console',
-      title: 'Lib Manager',
+      title: 'Skill Hub',
       searchPlaceholder: 'Search database...',
       allCategories: 'All Categories',
       db: {
@@ -277,10 +468,10 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       sections: {
         core: 'Core Parameters',
         vars: 'Dynamic Vars & Tags',
-        engineering: 'Prompt Engineering'
+        engineering: 'Agentic Engineering'
       },
       labels: {
-        designation: 'Prompt Designation',
+        designation: 'Designation',
         category: 'Category',
         engine: 'Recommended Engine',
         persona: 'Persona / Role',
@@ -288,8 +479,11 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         tags: 'System Tags',
         objective: 'Primary Objective',
         inputFormat: 'Input Format',
-        content: 'Prompt Content',
-        notes: 'Additional Notes'
+        content: 'Content / Prompt',
+        notes: 'Additional Notes',
+        type: 'Entry Type',
+        systemInstruction: 'System Instruction (Agent)',
+        tools: 'Tool Declarations (JSON)'
       },
       buttons: {
         audio: 'TTS_PLAY',
@@ -300,14 +494,14 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         pdf: 'DOWNLOAD PDF'
       },
       placeholders: {
-        name: 'Ex: Viral Content Generator',
-        persona: 'Ex: Senior SEO Specialist',
+        name: 'Ex: Agentic Flight Search',
+        persona: 'Ex: Smart Travel Agent',
         variable: 'Add variable...',
         tag: 'Add tag...',
-        objective: 'What is the specific goal of this sequence?',
-        input: 'Ex: Raw Text, URL, CSV, Image...',
-        content: '// Enter prompt sequence here...\n// Use [brackets] for variables.\n\nAct as a [Role]. Write a technical analysis of...',
-        notes: 'Usage instructions, context, constraints...'
+        objective: 'What capability does this agent provide?',
+        input: 'Ex: JSON, URL, Parameters...',
+        content: '// Base prompt or general instructions...',
+        notes: 'Usage instructions, limits, required APIs...'
       },
       status: {
         ready: 'READY TO PROCESS',
@@ -318,9 +512,9 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
       title: 'Database Manager',
       subtitle: 'Direct access, backups and optimization',
       columns: {
-        name: 'Prompt Name',
+        name: 'Name',
         category: 'Category',
-        preview: 'Preview (Start)',
+        preview: 'Preview',
         actions: 'AI Actions / Manage'
       },
       buttons: {
@@ -333,7 +527,7 @@ export const TRANSLATIONS: Record<'es' | 'en', TranslationDictionary> = {
         processing: 'PROCESSING BATCH...',
         reset: 'Factory Reset'
       },
-      empty: 'No prompts in database.',
+      empty: 'No entries in database.',
       dataManagement: 'Data Management'
     },
     cloud: {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, Copy, Check, Terminal, Megaphone, Target, Lightbulb, BarChart2, Code, LayoutGrid, Sparkles, Rocket } from 'lucide-react';
+import { Edit2, Copy, Check, Terminal, Megaphone, Target, Lightbulb, BarChart2, Code, LayoutGrid, Sparkles, Rocket, Zap, MessageSquare } from 'lucide-react';
 import { PromptEntry, Category, TranslationDictionary } from '../types';
 
 interface PromptTableProps {
@@ -56,6 +56,17 @@ const PromptCard: React.FC<PromptCardProps> = ({
       {/* Header: Name & Edit */}
       <div className="flex justify-between items-start relative z-10">
          <div className="flex flex-col gap-1 pr-6">
+            <div className="flex items-center gap-2 mb-1">
+              {prompt.type === 'skill' ? (
+                <span className="flex items-center gap-1 text-[9px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30 uppercase tracking-tighter">
+                  <Zap size={8} /> Skill
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[9px] font-bold bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30 uppercase tracking-tighter">
+                  <MessageSquare size={8} /> Prompt
+                </span>
+              )}
+            </div>
             <h3 className="text-lg font-bold text-white leading-tight group-hover:text-cyan-400 transition-colors">
                 {prompt.name}
             </h3>

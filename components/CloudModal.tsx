@@ -13,6 +13,7 @@ interface CloudModalProps {
 const REQUIRED_SQL = `create table public.prompts (
   id text primary key,
   user_id uuid references auth.users default auth.uid(),
+  type text default 'prompt',
   name text,
   category text,
   objective text,
@@ -21,6 +22,8 @@ const REQUIRED_SQL = `create table public.prompts (
   "recommendedAi" text,
   description text,
   content text,
+  "systemInstruction" text,
+  tools text,
   variables text[],
   "usageExamples" text,
   tags text[],

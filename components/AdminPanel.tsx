@@ -86,7 +86,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ prompts, setPrompts, onE
        if (extractedData.length > 0) {
           const newPrompts: PromptEntry[] = extractedData.map((data: Partial<PromptFormData>) => ({
             id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            category: Category.Other, // Default, user can organize later
+            type: 'prompt',
+            category: Category.Other, 
             name: data.name || "Imported Prompt",
             objective: data.objective || "No objective detected",
             inputType: "Texto",
